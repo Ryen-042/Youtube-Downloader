@@ -3,18 +3,6 @@ import AVMerger
 import os
 import re
 
-# Pseudocode:
-
-# select_mode() 						# video or playlist
-# open_video_link() 					# or open_playlist_link()
-# get_all_the_data_of_the_video()		# or videos
-# select_type_and_resolution()
-# any_extra()							# like subtitles or download the description
-
-# https://www.youtube.com/watch?v=RmJryKpLKrM
-
-# https://www.youtube.com/watch?v=Iwfe5XPSRRA
-
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def grouper_sort(vlist, group_by=1, sort_by=-1):
@@ -153,39 +141,3 @@ while(True):
     if(not continue_option):
         print("Exiting...")
         break
-
-
-def comments():
-    ## grouper_sort(vid_streams_dict)
-    # {'video/3gpp': [
-    # [<Stream: itag="17" mime_type="video/3gpp" res="144p" fps="7fps" vcodec="mp4v.20.3" acodec="mp4a.40.2" progressive="True" type="video">, 'video/3gpp', 'video', '3gpp', '144p', '13.72 MB', 13.72],
-
-    # 'video/mp4': [
-    # [<Stream: itag="160" mime_type="video/mp4" res="144p" fps="30fps" vcodec="avc1.4d400c" progressive="False" type="video">, 'video/mp4', 'video', 'mp4', '144p', '17.21 MB', 17.21],
-    # [<Stream: itag="133" mime_type="video/mp4" res="240p" fps="30fps" vcodec="avc1.4d400d" progressive="False" type="video">, 'video/mp4', 'video', 'mp4', '240p', '38.86 MB', 38.86],
-    # [<Stream: itag="134" mime_type="video/mp4" res="360p" fps="30fps" vcodec="avc1.4d401e" progressive="False" type="video">, 'video/mp4', 'video', 'mp4', '360p', '80.87 MB', 80.87],
-    # [<Stream: itag="18" mime_type="video/mp4" res="360p" fps="30fps" vcodec="avc1.42001E" acodec="mp4a.40.2" progressive="True" type="video">, 'video/mp4', 'video', 'mp4', '360p', '98.29 MB', 98.29],
-    # [<Stream: itag="135" mime_type="video/mp4" res="480p" fps="30fps" vcodec="avc1.4d401f" progressive="False" type="video">, 'video/mp4', 'video', 'mp4', '480p', '152.52 MB', 152.52],
-    # [<Stream: itag="136" mime_type="video/mp4" res="720p" fps="30fps" vcodec="avc1.64001f" progressive="False" type="video">, 'video/mp4', 'video', 'mp4', '720p', '292.66 MB', 292.66],
-    # [<Stream: itag="22" mime_type="video/mp4" res="720p" fps="30fps" vcodec="avc1.64001F" acodec="mp4a.40.2" progressive="True" type="video">, 'video/mp4', 'video', 'mp4', '720p', '315.74 MB', 315.74],
-    # [<Stream: itag="137" mime_type="video/mp4" res="1080p" fps="30fps" vcodec="avc1.640028" progressive="False" type="video">, 'video/mp4', 'video', 'mp4', '1080p', '548.37 MB', 548.37],
-
-    # 'video/webm': [
-    # [<Stream: itag="278" mime_type="video/webm" res="144p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '144p', '15.61 MB', 15.61],
-    # [<Stream: itag="242" mime_type="video/webm" res="240p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '240p', '31.63 MB', 31.63],
-    # [<Stream: itag="243" mime_type="video/webm" res="360p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '360p', '54.14 MB', 54.14],
-    # [<Stream: itag="244" mime_type="video/webm" res="480p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '480p', '94.05 MB', 94.05],
-    # [<Stream: itag="247" mime_type="video/webm" res="720p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '720p', '163.71 MB', 163.71],
-    # [<Stream: itag="248" mime_type="video/webm" res="1080p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '1080p', '288.09 MB', 288.09],
-    # [<Stream: itag="271" mime_type="video/webm" res="1440p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '1440p', '767.75 MB', 767.75],
-    # [<Stream: itag="313" mime_type="video/webm" res="2160p" fps="30fps" vcodec="vp9" progressive="False" type="video">, 'video/webm', 'video', 'webm', '2160p', '1.61 GB', 1652.27],
-
-    # 'audio/mp4': [
-    # [<Stream: itag="139" mime_type="audio/mp4" abr="48kbps" acodec="mp4a.40.5" progressive="False" type="audio">, 'audio/mp4', 'audio', 'mp4', None, '8.78 MB', 8.78],
-    # [<Stream: itag="140" mime_type="audio/mp4" abr="128kbps" acodec="mp4a.40.2" progressive="False" type="audio">, 'audio/mp4', 'audio', 'mp4', None, '23.29 MB', 23.29],
-
-    # 'audio/webm': [
-    # [<Stream: itag="249" mime_type="audio/webm" abr="50kbps" acodec="opus" progressive="False" type="audio">, 'audio/webm', 'audio', 'webm', None, '8.83 MB', 8.83],
-    # [<Stream: itag="250" mime_type="audio/webm" abr="70kbps" acodec="opus" progressive="False" type="audio">, 'audio/webm', 'audio', 'webm', None, '11.0 MB', 11.0],
-    # [<Stream: itag="251" mime_type="audio/webm" abr="160kbps" acodec="opus" progressive="False" type="audio">, 'audio/webm', 'audio', 'webm', None, '21.65 MB', 21.65]]}
-    pass
