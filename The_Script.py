@@ -87,12 +87,7 @@ def youtube_video_download():
     else:
         vid_options = input('Choose a category and a resolution option separated by a space or leave empty to stop: ').split(" ")
     print("")
-
-    #TODO1: Add the ability to download subtitles if available and rename it with the same filename
     
-    #TODO2: Next line causes `IndexError: list index out of range` if not entered correctly. (The commented lines are possible solution)
-    # if vid_options[0] >= len(streams_categories) or vid_options[2] >= len(vid_streams_dict[streams_categories[int(vid_options[0])]]):
-        # try again!
     if(vid_options[0]): # if not empty
         streams_categories = list(vid_streams_dict.keys())
         selected_stream = vid_streams_dict[streams_categories[int(vid_options[0])-1]][int(vid_options[1])-1]
@@ -107,14 +102,14 @@ def youtube_video_download():
             os.rename(valid_filename + ".mp4", formated_filename + ".mp4")
 
         else:
-            if not os.path.isfile(valid_filename + ' (Video).mp4'):
+            if not os.path.isfile(formated_filename + ' (Video).mp4'):
                 selected_stream[0].download()
                 os.rename(valid_filename + ".mp4", formated_filename + " (Video).mp4")
             else:
                 print("Video stream already downloaded\n")
             
             print(f"Downloading {selected_stream[1]}, {selected_stream[-4]}, {selected_stream[-2]}...")
-            if not os.path.isfile(valid_filename + " (Audio).mp4"):
+            if not os.path.isfile(formated_filename + " (Audio).mp4"):
                 selected_stream = vid_streams_dict[streams_categories[int(vid_options[2])-1]][int(vid_options[3])-1]
                 # selected_stream[0].download(filename=vid_obj.title+' (Audio).mp4') >> Causes a weird bug where the file is downloaded but empty (and some times not downloaded at all).
                 selected_stream[0].download()
@@ -125,7 +120,7 @@ def youtube_video_download():
             print("Starting merging...\n")
             try:
                 AVMerger.avmerger(  directory = os.path.dirname(os.path.abspath(__file__)), 
-                                    filename  = valid_filename)
+                                    filename  = formated_filename)
             except:
                 print("Something went wrong! Check if both the video and audio streams have been downloaded.")
             else:
