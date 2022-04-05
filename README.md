@@ -6,10 +6,11 @@ Because of Google. I was using FDM to download videos from Youtube until Google 
 Other than the intended purpose of downloading a Youtube video, you can:
 - Download audio streams
 - Download a video stream and an audio stream then merge them with ffmpeg
-- Downloading videos with arabic titles won't blow your machine (hopefully)
+- Downloading videos with Arabic titles won't blow your machine (hopefully)
 ## Prerequisites:
 - Install ffmpeg. (You can see how to [here](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/))
 - `pip install ffmpeg`
 - `pip install pytube`
 ## Known Issues:
-Some streams cannot be downloaded for some reason. Any stream with a size of `0.01 MB` cannot be downloaded so don't choose them.
+- Some streams cannot be downloaded for some reason. Any stream with a size of `0.01 MB` cannot be downloaded so don't choose them.
+- Don't select `merge_option` with videos that have titles in strange languages (like Chinese) or that have accent marks (like `façade` in French). Arabic accents (diacritics) are okay though.
