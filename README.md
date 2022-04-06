@@ -13,4 +13,3 @@ Other than the intended purpose of downloading a Youtube video, you can:
 - `pip install pytube`
 ## Known Issues:
 - Some streams cannot be downloaded for some reason. Any stream with a size of `0.01 MB` cannot be downloaded so don't choose them.
-- Don't select `merge_option` with videos that have titles in strange languages (like Chinese) or that have accent marks (like `façade` in French). Arabic accents (diacritics) are okay though.
