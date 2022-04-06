@@ -87,14 +87,14 @@ def youtube_video_download():
     else:
         download_options = input('Choose a category and a resolution option separated by a space or leave empty to stop: ').split(" ")
     print("")
-
+    
     if(download_options[0]): # if not empty
         streams_categories = list(vid_streams_dict.keys())
         selected_stream = vid_streams_dict[streams_categories[int(download_options[0])-1]][int(download_options[1])-1]
         print(f"Downloading {selected_stream[1]}, {selected_stream[-4]}, {selected_stream[-2]}...")
 
         # remove stupid colons and unsupported characters for a filename
-        valid_filename    = re.sub("[<>:\"/\\|?*,]", "", vid_obj.title)
+        valid_filename    = re.sub("[<>:\"/\\|?*,%]", "", vid_obj.title)
         formated_filename = re.sub("[<>:\"/\\|?*]", " -", vid_obj.title)
 
         if not merge_option:
@@ -117,14 +117,18 @@ def youtube_video_download():
             else:
                 print("Audio stream already downloaded\n")
 
-            print("Starting merging...\n")
-            try:
-                AVMerger.avmerger(  directory = os.path.dirname(os.path.abspath(__file__)), 
-                                    filename  = formated_filename)
-            except:
-                print("Something went wrong! Check if both the video and audio streams have been downloaded.")
+            print("Starting merging...")
+            if not os.path.isfile(formated_filename + " (Merged).mp4"):
+                print("")
+                try:
+                    AVMerger.avmerger(  directory = os.path.dirname(os.path.abspath(__file__)), 
+                                        filename  = formated_filename)
+                except:
+                    print("Something went wrong! Check if both the video and audio streams have been downloaded correctly.")
+                else:
+                    print(f"File merged successfully.\n")
             else:
-                print(f"File merged successfully\n")
+                print("Video is already merged\n")
 
     continue_option = True if input("Do you want to download another video? (1:Yes, else:No): ").lower() in ["1", "yes", "y"] else False
     print("")
