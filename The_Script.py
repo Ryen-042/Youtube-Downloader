@@ -81,21 +81,21 @@ def youtube_video_download():
     if "audio/mp4" in vid_streams_dict or "audio/webm" in vid_streams_dict:
         merge_option = True if input(f"Do you want to download a video & an audio streams then merge them with ffmpeg? (1:yes, else:No): ").lower() in ["1", "yes", "y"] else False
     
-    vid_options = []
+    download_options = []
     if merge_option:
-        vid_options = input('Choose a category and a resolution option for both the video & audio streams (4 numbers) separated by spaces or leave empty to stop: ').split(" ")
+        download_options = input('Choose a category and a resolution option for both the video & audio streams (4 numbers) separated by spaces or leave empty to stop (mp4 streams only): ').split(" ")
     else:
-        vid_options = input('Choose a category and a resolution option separated by a space or leave empty to stop: ').split(" ")
+        download_options = input('Choose a category and a resolution option separated by a space or leave empty to stop: ').split(" ")
     print("")
-    
-    if(vid_options[0]): # if not empty
+
+    if(download_options[0]): # if not empty
         streams_categories = list(vid_streams_dict.keys())
-        selected_stream = vid_streams_dict[streams_categories[int(vid_options[0])-1]][int(vid_options[1])-1]
+        selected_stream = vid_streams_dict[streams_categories[int(download_options[0])-1]][int(download_options[1])-1]
         print(f"Downloading {selected_stream[1]}, {selected_stream[-4]}, {selected_stream[-2]}...")
 
         # remove stupid colons and unsupported characters for a filename
-        valid_filename    = re.sub("[^A-Za-z0-9_.\-\\ !\(\)\[\]\u0600-\u065F\u066A-\u06EF\u06FA-\u06FF]", "", vid_obj.title)
-        formated_filename = re.sub("[^A-Za-z0-9_.\-\\ !\(\)\[\]\u0600-\u065F\u066A-\u06EF\u06FA-\u06FF]", " -", vid_obj.title)
+        valid_filename    = re.sub("[<>:\"/\\|?*,]", "", vid_obj.title)
+        formated_filename = re.sub("[<>:\"/\\|?*]", " -", vid_obj.title)
 
         if not merge_option:
             selected_stream[0].download()
@@ -108,9 +108,9 @@ def youtube_video_download():
             else:
                 print("Video stream already downloaded\n")
             
+            selected_stream = vid_streams_dict[streams_categories[int(download_options[2])-1]][int(download_options[3])-1]
             print(f"Downloading {selected_stream[1]}, {selected_stream[-4]}, {selected_stream[-2]}...")
             if not os.path.isfile(formated_filename + " (Audio).mp4"):
-                selected_stream = vid_streams_dict[streams_categories[int(vid_options[2])-1]][int(vid_options[3])-1]
                 # selected_stream[0].download(filename=vid_obj.title+' (Audio).mp4') >> Causes a weird bug where the file is downloaded but empty (and some times not downloaded at all).
                 selected_stream[0].download()
                 os.rename(valid_filename + ".mp4", formated_filename + " (Audio).mp4")
