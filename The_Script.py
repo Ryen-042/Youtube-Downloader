@@ -36,7 +36,6 @@ def youtube_video_download():
             link_valid = True
         except:
             print(f"\n({link}) is not a valid link for a YouTube video.\n\nTry again:", end=" ")
-
     print("\nA list of all available streams is being fetched...\n")
     vid_streams_dict = [] # initially a list but becomes a dict after using grouper_sort()
 
@@ -77,11 +76,13 @@ def youtube_video_download():
         print("\n")
     
     # remove stupid colons and unsupported characters for a filename
-        valid_filename    = re.sub("[<>:\"/\\|.?*,%]", "", vid_obj.title)
-        formated_filename = re.sub("[<>:\"/\\|?*]", " -", vid_obj.title)
+    valid_filename    = re.sub("[<>:\"\'/\\|.?*,%]", "", vid_obj.title)
+    formated_filename = re.sub("[<>:\"/\\|?*]", " -", vid_obj.title)
 
     # Option_1: Download video description
     vid_description_option = True if input(f"Download Video Description? (1:yes, else:No): ").lower() in ["1", "yes", "y"] else False
+    print("")
+    
     if vid_description_option:
         try:
             with open(formated_filename + " (Description).txt", "w", encoding="utf-8") as vid_discription:
@@ -107,27 +108,35 @@ def youtube_video_download():
     # Option_3: Download subtitles
     # There is a very annoying bug in the Caption class, to solve this bug see:
     # https://stackoverflow.com/questions/68780808/xml-to-srt-conversion-not-working-after-installing-pytube
-    vid_caption_option = True if input(f"Download Video Caption? (1:yes, else:No): ").lower() in ["1", "yes", "y"] else False
-    if vid_caption_option:
-        caption_filename = formated_filename + " (Merged).srt" if merge_option else formated_filename + ".srt"
-        try:
-            if vid_obj.captions.get("en"):
-                vid_obj.captions["en"].download(title=caption_filename)
-            elif vid_obj.captions.get("a.en"):
-                vid_obj.captions["a.en"].download(title=caption_filename)
-            else:
-                raise AssertionError
-        except AssertionError:
-            print("Sorry, couldn't find any subtitle.")
-        except KeyError:
-            print("Unexpected error occurred while downloading video subtitles")
-        else:
+    if(vid_obj.captions):
+        available_captions = {i+1:cap.code for i, cap in enumerate(vid_obj.captions.keys())}
+        print(f"Available captions are:\n{available_captions}\n")
+        valid_caption_choice = False
+        while(not valid_caption_choice):
+            caption_option = input("Select a number corresponding to a caption or leave empty to skip: ")
             print("")
-        
-        # Another way to download subtitles
-        # xml_captions = vid_obj.captions["en"]
-        # print(xml_captions.xml_caption_to_srt(xml_captions.xml_captions))
-        
+            if not caption_option:
+                break
+
+            try:
+                caption_choice = available_captions[int(caption_option)]
+                valid_caption_choice = True
+            except:
+                print(f"{caption_option} is not a valid choice!\n")
+    
+        if caption_option:
+            caption_filename = formated_filename + " (Merged)" if merge_option else formated_filename
+            try:
+                vid_obj.captions[caption_choice].download(title=caption_filename)
+            except:
+                print("Unexpected error occurred while downloading the captions!")
+            else:
+                print(f"{vid_obj.captions[caption_choice].name} captions downloaded successfully!\n")
+            
+            # Another way to download subtitles
+            # xml_captions = vid_obj.captions["en"]
+            # print(xml_captions.xml_caption_to_srt(xml_captions.xml_captions))
+            
     if(download_options[0]): # if not empty
         streams_categories = list(vid_streams_dict.keys())
         selected_stream = vid_streams_dict[streams_categories[int(download_options[0])-1]][int(download_options[1])-1]
