@@ -19,10 +19,12 @@ def grouper_sort(vlist, group_by=1, sort_by=-1):
     return groups
 
 def on_complete(stream, file_path):
-    print(f"File downloaded successfully in the next path: {file_path}\n")
+    # Print only the path to the downloaded file, not including the file's name as it is changed after downloading.
+    path_to_file = '\\'.join((file_path.split('\\')[:-1]))
+    print(f"File downloaded successfully in the next path: {path_to_file}\n")
 
 def on_progress(stream, chunk, bytes_remaining):
-    print(round(100 - bytes_remaining/stream.filesize * 100, 2), f"{round((stream.filesize - bytes_remaining)/1000/1000, 2)} : {round(stream.filesize/1000/1000, 2)} MB", sep="%, ")
+    print(f"{round(100 - bytes_remaining/stream.filesize * 100, 2)}%, {round((stream.filesize - bytes_remaining)/1000/1000, 2)} : {round(stream.filesize/1000/1000, 2)} MB\r", end="")
 
 def youtube_video_download():
     # Getting a link from the user
@@ -108,6 +110,11 @@ def youtube_video_download():
     # Option_3: Download subtitles
     # There is a very annoying bug in the Caption class, to solve this bug see:
     # https://stackoverflow.com/questions/68780808/xml-to-srt-conversion-not-working-after-installing-pytube
+
+    #Another weird bug when converting xml captions into srt ones where the timestamps are converted wrongly. Refer to this link for the solution:
+    # https://github.com/pytube/pytube/issues/1077 | You just have to change milliseconds to seconds in line 63 in captions.py file:
+    #       fraction, whole = math.modf(d)      >>      fraction, whole = math.modf(d/1000).
+    
     if(vid_obj.captions):
         available_captions = {i+1:cap.code for i, cap in enumerate(vid_obj.captions.keys())}
         print(f"Available captions are:\n{available_captions}\n")
@@ -184,4 +191,5 @@ while(True):
     continue_option = youtube_video_download()
     if(not continue_option):
         print("Exiting...")
+        os.startfile(os.path.dirname(os.path.abspath(__file__)))
         break
