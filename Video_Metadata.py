@@ -1,16 +1,16 @@
 # Available functions in this module:
 # ['grouper_sort',  'get_vid_metadata',  'print_streams']
 
-def grouper_sort(vlist, group_by=1, sort_by=-1):
+def grouper_sort(stream_list, group_by=1, sort_by=-1):
     # [<Stream: itag="134" mime_type="video/mp4" res="360p" fps="30fps" vcodec="avc1.4d401e" progressive="False" type="video">, 
-    #     'video/mp4', 'video', 'mp4', '360p', False, '  1.24 GB', 1242.29]
+    #     'video/mp4', 'video', 'vid_id', '360p', False, '  1.24 GB', 1242.29]
 
     # [<Stream: itag="140" mime_type="audio/mp4" abr="128kbps" acodec="mp4a.40.2" progressive="False" type="audioudio', 'mp4', None, False, '141.25 MB', 1">,
-    #     'audio/mp4', 'audio', 'mp4', None, False, '374.89 MB', 374.89]
+    #     'audio/mp4', 'audio', 'vid_id', None, False, '374.89 MB', 374.89]
     groups = {}
 
     # Group by `mime_type`, i.e., 'video/mp4', Or 'audio/mp4', or ...
-    for vid_stream in vlist: 
+    for vid_stream in stream_list: 
         groups[vid_stream[group_by]] = groups.get(vid_stream[group_by], []) + [vid_stream]
     
     # Sort by filesize
@@ -40,7 +40,8 @@ def get_vid_metadata(vid_obj):
                 str_file_size = f"{round(file_size/1000, 2):6} GB"
         else:   str_file_size = f"{file_size:6} MB"
 
-        vid_streams_dict.append([stream, stream.mime_type, stream.type, stream.subtype, stream.resolution, "Progressive" if stream.is_progressive else False, str_file_size, file_size])
+        vid_streams_dict.append([   stream, stream.mime_type, stream.type, vid_obj.video_id,
+                                    stream.resolution, stream.is_progressive, str_file_size, file_size])
 
     # Formatting
     vid_streams_dict = grouper_sort(vid_streams_dict)
@@ -57,11 +58,11 @@ def print_streams(vid_streams_dict):
         for j, vid in enumerate(vid_streams_dict[k], 1):
             if vid[-4]:     # resolution
                 if vid[-3]: # is_progressive
-                    print(f"   {j:2}) {vid[-4]:5}  >>  {vid[-2]:9}  >>  {vid[-3]}") # resolution, str_file_size & is_progressive
+                    print(f"   {j:2}) {vid[-4]:5}  >>  {vid[-2]:9}  >>  Progressive") # resolution, str_file_size & is_progressive
                 else:
                     print(f"   {j:2}) {vid[-4]:5}  >>  {vid[-2]:9}") # resolution, str_file_size
             else:   # no resolution data, i.e. an audio stream
                 print(f"   {j:2}) Audio  >>  {vid[-2]:9}  >>  {vid[0].abr}")
-        print("\n")
+        print("")
     
     return [len(vid_streams_dict)] + streams_in_each_category
