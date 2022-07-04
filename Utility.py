@@ -2,11 +2,11 @@ import AVMerger as avm
 import os, re
 import youtube_dl
 # Available functions in this module:
-# ['change_filename', 'yes_no_choice',                    'check_stream_existence',
-#  'merge_streams',   'optional_downloads',               'download_subtitles',
-#  'select_streams',  'format_selected_stream_into_dict', 'download_streams']
+# ['format_name',    'yes_no_choice',                    'check_stream_existence',
+#  'merge_streams',  'optional_downloads',               'download_subtitles',
+#  'select_streams', 'format_selected_stream_into_dict', 'download_streams']
 
-def change_filename(filename, pattern, replacement=""):
+def format_name(filename, pattern, replacement=""):
     new_named    = re.sub(pattern, replacement, filename)
     new_named    = new_named.replace("\\", "")
     return new_named
@@ -28,7 +28,6 @@ def yes_no_choice(message, blank_true=False):
 def check_stream_existence(stream_obj, formated_filename, valid_filename, stream_type):
     check1 = os.path.isfile(valid_filename + '.mp4')
     check2 = os.path.isfile(formated_filename + (" (Video).mp4" if stream_type == "video" else " (Audio).mp4"))
-    
     if not check1 and not check2:
         stream_obj.download()
         os.rename(valid_filename + ".mp4", formated_filename + (" (Video).mp4" if stream_type == "video" else " (Audio).mp4"))
@@ -39,19 +38,16 @@ def check_stream_existence(stream_obj, formated_filename, valid_filename, stream
 
 
 
-def merge_streams(formated_filename):
+def merge_streams(formated_filename, vid_id):
     print("Starting merging...")
-    if not os.path.isfile(formated_filename + " (Merged).mp4"):
-        print("")
-        try:
-            avm.avmerger(  directory = os.path.dirname(os.path.abspath(__file__)), 
-                                filename  = formated_filename)
-        except:
-            print("Something went wrong! Check if both the video and audio streams have been downloaded correctly.\n")
-        else:
-            print(f"File merged successfully.\n")
+    subtitles = download_subtitles(vid_id, formated_filename)
+    try:
+        avm.avmerger(   os.path.dirname(os.path.abspath(__file__)),
+                        formated_filename, subtitles)
+    except:
+        print("Something went wrong! Check if both the video and audio streams have been downloaded correctly.\n")
     else:
-        print("Video is already merged\n")
+        print(f"File merged successfully.\n")
 
 
 
@@ -70,8 +66,8 @@ def optional_downloads(formated_filename, option_name, vid_obj):
 
 
 
-def download_subtitles(vid_link, filename):
-    if not os.path.isfile(filename + "en.vtt") and not os.path.isfile(filename + "ar.vtt"):
+def download_subtitles(vid_id, formated_filename):
+    if not os.path.isfile(formated_filename + ".en.vtt") and not os.path.isfile(formated_filename + ".ar.vtt"):
         print("Downloading subtitles...")
         
         ## useful links: https://github.com/ytdl-org/youtube-dl#subtitle-options
@@ -88,9 +84,16 @@ def download_subtitles(vid_link, filename):
         ## Download specific subtitles provided by the owner of the video + the auto generated subtitles:
         #   youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download "https://www.youtube.com/watch?v=MZS1F0Hp28A" -o "ff"
 
-        os.system(f"youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"{vid_link}\" -o \"{filename}\"")
+        os.system(f"youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"https://www.youtube.com/watch?v={vid_id}\" -o \"{formated_filename}\"")
     else:
         print("Subtitles already downloaded.\n")
+    
+    subtitles = ""
+    if os.path.isfile(formated_filename + ".en.vtt"):
+        subtitles += "1"
+    if os.path.isfile(formated_filename + ".ar.vtt"):
+        subtitles += "2"
+    return subtitles
 
 
 def select_streams(merge_option, categories_lengths, message):
@@ -155,12 +158,15 @@ def format_selected_stream_into_dict(formated_filename, valid_filename, selected
 def download_streams(selected_streams):
     for stream in selected_streams:
         if 'video' in stream:
-            print(f"Downloading {stream['video'][0][1]}, {stream['video'][0][-4]}, {stream['video'][0][-2]}...")
+            print(f"Downloading {stream['video'][0][0].title}")
+            print(f"{stream['video'][0][1]}, {stream['video'][0][-4]}, {stream['video'][0][-2].strip()}...")
             check_stream_existence(stream['video'][0][0], stream['video'][1], stream['video'][2], stream['video'][3])
         
         if 'audio' in stream:
-            print(f"Downloading {stream['video'][0][1]}, {stream['video'][0][0].abr}, {stream['video'][0][-2]}...\n")
+            print(f"Downloading {stream['audio'][0][1]}, {stream['audio'][0][0].abr}, {stream['audio'][0][-2].strip()}...")
             check_stream_existence(stream['audio'][0][0], stream['audio'][1], stream['audio'][2], stream['audio'][3])
         
         if 'video' in stream and 'audio' in stream:
-            merge_streams(stream['video'][1])
+            merge_streams(stream['video'][1], stream['video'][0][-5])
+        print("="*20)
+        print("")
