@@ -1,8 +1,8 @@
 from pytube import YouTube, Playlist 
 
 # Available functions in this module:
-# ['on_complete',            'on_progress',  'vid_link_checker',
-#  'playlist_link_checker',  'get_vid_obj',  'get_vid_objs_from_file',
+# ['on_complete',  'on_progress',  'vid_link_checker',
+#  'get_vid_obj',  'get_vid_objs_from_file',
 #  'get_vid_objs_from_playlist']
 
 
@@ -21,14 +21,6 @@ def on_progress(stream, chunk, bytes_remaining):
 def vid_link_checker(link):
     try:
         return YouTube(link, on_complete_callback=on_complete, on_progress_callback=on_progress)
-    except:
-        return False
-
-
-
-def playlist_link_checker(link):
-    try:
-        return Playlist(link)
     except:
         return False
 
@@ -64,7 +56,7 @@ def get_vid_objs_from_playlist():
         playlist_link = input()
         try:
             playlist_obj = Playlist(playlist_link)
-            len(playlist_obj)
+            len(playlist_obj) # this line triggers the `KeyError: 'list'` exception if the link is invalid
             link_valid = True
         except:
             print(f"\n({playlist_link}) is not a valid link for a YouTube playlist.\n\nTry again:", end=" ")
