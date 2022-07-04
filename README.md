@@ -9,6 +9,7 @@ Another reason is my need for a fast, easy to use with keyboard method to downlo
 - Download audio streams.
 - Download a video stream and an audio stream then merge them with ffmpeg.
 - Download a playlist or a subset of a playlist.
+- Download subtitles.
 - Download video description.
 ## Prerequisites:
 - Install ffmpeg. (You can see how to [here](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/))
