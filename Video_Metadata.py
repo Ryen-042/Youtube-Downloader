@@ -1,5 +1,15 @@
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+
+
 # Available functions in this module:
 # ['grouper_sort',  'get_vid_metadata',  'print_streams']
+
+
+console = Console()
+
 
 def grouper_sort(stream_list, group_by=1, sort_by=-1):
     # [<Stream: itag="134" mime_type="video/mp4" res="360p" fps="30fps" vcodec="avc1.4d401e" progressive="False" type="video">, 
@@ -49,20 +59,39 @@ def get_vid_metadata(vid_obj):
     return vid_streams_dict
 
 
+
 # Prints and counts categories and streams
 def print_streams(vid_streams_dict):
     streams_in_each_category = []
+
+    table = Table(  style         = "bold blue1", 
+                    row_styles    = ["bold blue1", "bold dark_violet"],
+                    header_style  = "bold deep_pink1",
+                    show_lines=True)
+    
+    table.add_column("Category", justify="middle", no_wrap=True, vertical="middle")
+    table.add_column("Quality",  justify='left')
+    table.add_column("Size",     justify="right")
+    table.add_column("Progressive", justify="left")
+
     for i, k in enumerate(vid_streams_dict, 1):
         streams_in_each_category.append(len(vid_streams_dict[k]))
-        print(f"({i}) [{k}]:")
+        
+        qualities   = []
+        sizes       = []
+        prog_states = []
+        
         for j, vid in enumerate(vid_streams_dict[k], 1):
             if vid[-4]:     # resolution
                 if vid[-3]: # is_progressive
-                    print(f"   {j:2}) {vid[-4]:5}  >>  {vid[-2]:9}  >>  Progressive") # resolution, str_file_size & is_progressive
+                    prog_states.append("Progressive")
                 else:
-                    print(f"   {j:2}) {vid[-4]:5}  >>  {vid[-2]:9}") # resolution, str_file_size
+                    prog_states.append("")
+                qualities.append(f"{j}) {vid[-4]}")
             else:   # no resolution data, i.e. an audio stream
-                print(f"   {j:2}) Audio  >>  {vid[-2]:9}  >>  {vid[0].abr}")
-        print("")
-    
+                qualities.append(f"{j}) {vid[0].abr}")
+            sizes.append(f"{vid[-2]}")
+        table.add_row(f"({i}) {k}", "\n".join(qualities), "\n".join(sizes), "\n".join(prog_states))
+    console.print(table)
+    console.print("")
     return [len(vid_streams_dict)] + streams_in_each_category
