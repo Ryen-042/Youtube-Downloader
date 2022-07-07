@@ -1,12 +1,13 @@
 import os
+from rich import print as rprint
 
 def avmerger(directory, filename, subtitles=''):
 	input_video  = directory + "\\" + filename + ' (Video).mp4'
 	input_audio  = directory + "\\" + filename + ' (Audio).mp4'
 	merged_video = directory + "\\" + filename + ' (Merged).mp4'
-	
 	if subtitles:
 		input_subtitles = directory + "\\" + filename
+		
 		if subtitles == '12':
 			os.system(f"ffmpeg -loglevel error -hide_banner -nostats -i \"{input_video}\" -i \"{input_audio}\" -i \"{input_subtitles}\".en.vtt -i \"{input_subtitles}\".ar.vtt -map 0:v -map 1:a -map 2:s -map 3:s -c:v copy -c:a copy -c:s:0 mov_text -c:s:1 mov_text -metadata:s:s:0 language=eng -metadata:s:s:1 language=ara \"{merged_video}\"")
 			os.remove(input_subtitles + ".en.vtt")
@@ -20,8 +21,11 @@ def avmerger(directory, filename, subtitles=''):
 	else:
 		os.system(f"ffmpeg -loglevel error -hide_banner -nostats -i \"{input_video}\" -i \"{input_audio}\" -c copy \"{merged_video}\"")
 	
-	os.remove(input_video)
-	os.remove(input_audio)
+	if os.path.isfile(merged_video):
+		os.remove(input_video)
+		os.remove(input_audio)
+	else:
+		rprint("[bold plum4 on grey23][bold red]Error[/]: Merged file not found[/]")
 
 
 if __name__ == "__main__":
