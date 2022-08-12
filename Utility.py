@@ -2,7 +2,6 @@ import AVMerger as avm
 from rich.console import Console
 from rich.theme import Theme
 
-import youtube_dl
 import os, re
 
 # Available functions in this module:
@@ -25,11 +24,20 @@ custom_theme = Theme({
 console = Console(theme=custom_theme)
 
 
-
-def format_name(filename, pattern, replacement=""):
-    new_named    = re.sub(pattern, replacement, filename)
-    new_named    = new_named.replace("\\", "")
-    return new_named
+# valid_filename:    [<>\"/\\?*:|#\'.,%]
+# formated_filename: [<>\"/\\?*:|]
+def format_name(filename, extra_pattern=""):
+    new_name    = re.sub('[<>\"/\\?*]', "", filename)
+    new_name    = new_name.replace("\\", "")
+    
+    if not extra_pattern: # extra_pattern is set only for valid_filename
+        new_name    = re.sub('[:]', ".", new_name)
+        new_name    = re.sub('[|]', "-", new_name)
+        new_name    = re.sub(' +', ' ', new_name) # remove multiple spaces
+    else:
+        new_name    = re.sub('[:|#\'.,%]', "", new_name)
+    
+    return new_name
 
 
 
@@ -64,8 +72,12 @@ def merge_streams(formated_filename, vid_id):
     console.print("[bold blue1 on grey23]Starting merging...[/]")
     subtitles = download_subtitles(vid_id, formated_filename)
     try:
-        avm.avmerger(   os.path.dirname(os.path.abspath(__file__)),
+        merge_status = avm.avmerger(   os.path.dirname(os.path.abspath(__file__)),
                         formated_filename, subtitles)
+        if not merge_status:
+            raise ValueError
+    except ValueError:
+        console.print("[warning1]Value Error! [warning2]False[/] was returned from the merging function. Check if both streams have been downloaded correctly.[/]\n")
     except:
         console.print("[warning1]Something went wrong! Check if both the [warning2]video[/] and [warning2]audio[/] streams have been downloaded correctly.[/]\n")
     else:
@@ -106,7 +118,9 @@ def download_subtitles(vid_id, formated_filename):
         ## Download specific subtitles provided by the owner of the video + the auto generated subtitles:
         #   youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download "https://www.youtube.com/watch?v=MZS1F0Hp28A" -o "ff"
 
-        os.system(f"youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"https://www.youtube.com/watch?v={vid_id}\" -o \"{formated_filename}\"")
+        # os.system(f"youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"https://www.youtube.com/watch?v={vid_id}\" -o \"{formated_filename}\"")
+
+        os.system(f"yt-dlp --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"https://www.youtube.com/watch?v={vid_id}\" -o \"{formated_filename}\"")
     else:
         console.print("[exists][normal2]Subtitles[/] already downloaded.[/]\n")
     
@@ -118,10 +132,12 @@ def download_subtitles(vid_id, formated_filename):
     return subtitles
 
 
-def select_streams(merge_option, categories_lengths, skip_not_stop = True):
+def select_streams(merge_option, categories_lengths, skip_not_stop = True, res_only = False):
     valid_choices = False
-    if merge_option:
+    if merge_option and not res_only:
         message = f"[normal1]Select a [normal2]category[/] and a [normal2]resolution[/] option for both the video & audio streams ([normal2]4[/] numbers) separated by [normal2]spaces[/] or [normal2]leave empty[/] to {'skip' if skip_not_stop else 'stop'}: [/]"
+    elif res_only:
+        message = f"[normal1]Select a [normal2]resolution[/] option for both the video & audio streams ([normal2]2[/] numbers) separated by a [normal2]space[/] or [normal2]leave empty[/] to {'skip' if skip_not_stop else 'stop'}: [/]"
     else:
         message = f"[normal1]Select a [normal2]category[/] and a [normal2]resolution[/] option separated by a [normal2]space[/] or [normal2]leave empty[/] to {'skip' if skip_not_stop else 'stop'}: [/]"
 
@@ -134,13 +150,16 @@ def select_streams(merge_option, categories_lengths, skip_not_stop = True):
         if len(choices) == 1 and not choices[0]:
                 return choices
 
-        if len(choices) > (4 if merge_option else 2):
-            console.print(f"[warning1]Invalid input. Requested [warning2]{4 if merge_option else 2}[/] numbers, but got [warning2]{len(choices)}[/]. Your input: [warning2]{choices}[/][/]\n")
+        if not res_only and len(choices) > (4 if merge_option else 2) or res_only and len(choices) > 2:
+            console.print(f"[warning1]Invalid input. Requested [warning2]{2 if res_only else 4 if merge_option else 2}[/] numbers, but got [warning2]{len(choices)}[/] inputs. Your input: [warning2]{choices}[/][/]\n")
             continue
-        elif len(choices) != (4 if merge_option else 2):
-            console.print(f"[warning1][warning2]Not enough data[/]. Requested [warning2]{4 if merge_option else 2}[/] numbers, but got [warning2]{len(choices)}[/]. Your input: [warning2]{choices}[/][/]\n")
+        elif not res_only and len(choices) != (4 if merge_option else 2) or res_only and len(choices) != 2:
+            console.print(f"[warning1][warning2]Not enough data[/]. Requested [warning2]{2 if res_only else 4 if merge_option else 2}[/] numbers, but got [warning2]{len(choices)}[/] input{'s' if len(choices) > 1 else ''}. Your input: [warning2]{choices}[/][/]\n")
             continue
         
+        if res_only:
+            choices = [1, choices[0], 2, choices[1]]
+
         try:
             if int(choices[0]) <= categories_lengths[0]:
                 if merge_option and int(choices[2]) <= categories_lengths[0] or not merge_option:
