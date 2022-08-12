@@ -10,10 +10,16 @@ Another reason is my need for a fast, easy to use with keyboard method to downlo
 - Download a video stream and an audio stream then merge them with ffmpeg.
 - Download a playlist or a subset of a playlist.
 - Download individual videos from links in a text file.
-- Download subtitles.
+- Using the merge option will automaticall download English and Arabic subtitles (auto-generated and manually created).
 - Download video description.
+- Terminal arguments support to skip the input steps.
+## Usage:
+You can either run the script normally in a step-by-step manner and enter what is asked from you, or simply use terminal arguments and skip the input steps. Ex:
+- Step by step: `python "main.py"`
+- With terminal args: `python "main.py" [script_mode] [youtube_link] [start_video_number] [end_video_number]`
 ## Prerequisites:
 - Install ffmpeg. (You can see how to [here](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/))
 - `pip install pytube`
-- `pip install youtube_dl`
+- ~~`pip install youtube_dl'~~
+- `pip install yt-dlp`
 - `pip install rich`
