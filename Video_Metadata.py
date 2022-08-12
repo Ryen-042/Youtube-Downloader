@@ -1,6 +1,5 @@
 from rich.console import Console
 from rich.table import Table
-from rich import box
 
 
 
@@ -31,11 +30,13 @@ def grouper_sort(stream_list, group_by=1, sort_by=-1):
 
 
 
-def get_vid_metadata(vid_obj):
+def get_vid_metadata(vid_obj, playlist_skip_mime_types = False):
     # Initially a list but becomes a dict after using grouper_sort()
     vid_streams_dict = []
     
     for stream in vid_obj.streams:
+        if playlist_skip_mime_types and stream.mime_type not in ["video/mp4", "audio/mp4"]:
+            continue
         # Sometimes, one or more streams for are corrupted, their sizes are unknown and raises an error when accessed, and 
         # cannot be downloaded (but some other data are accessable).
         try:
