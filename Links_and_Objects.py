@@ -1,8 +1,6 @@
-from pytube import YouTube, Playlist #, request
-import pytube
+from pytube import YouTube, Playlist, request
 from pytube.cli import on_progress as pytube_on_progress
-from rich.console import Console
-from rich.theme import Theme
+from global_imports import *
 
 
 ## Available functions in this module:
@@ -11,23 +9,9 @@ from rich.theme import Theme
 #  'get_vid_objs_from_playlist']
 
 
-## Color Scheme:
-# Normal  Text: [normal1] --- [normal2] <var> [/] --- [/]
-# Warning Text: [warning1] ([warning2] <var> [/]) --- [/]
-
-custom_theme = Theme({
-    "normal1"       :   "bold blue1 on grey23",
-    "normal2"       :   "bold dark_violet",
-    "warning1"      :   "bold plum4 on grey23",
-    "warning2"      :   "bold red"
-})
-
-console = Console(theme=custom_theme)
-
-
 #~ https://github.com/pytube/pytube/issues/1035
 # To change the value here to something smaller to decrease chunk sizes, thus increasing the number of times that the progress callback occurs:
-# pytube.request.default_range_size = int(9437184/9)  # 1MB chunk size
+request.default_range_size = int(9437184/9*5) # 5MB chunk size
 
 #~ To change the look of the built-in progress bar in pytube, modify the `display_progress_bar` function by adding these lines in the `cli.py` file:
 # mbytes_remaining = round( ( filesize - (filesize - bytes_received) ) /1000/1000, 2)
@@ -117,7 +101,10 @@ def get_start_end(limit, from_video, to_video):
 
 
 def get_vid_objs_from_file(path="individual-video-links.txt"):
-    with open(path, 'r') as links:
+    if not os.path.exists(path):
+        with open(path, "w"):
+            return []
+    with open(path, "r") as links:
         vid_objs = []
         for link_num, link in enumerate(links):
             vid_objs.append(vid_link_checker(link))
@@ -147,15 +134,20 @@ def get_vid_objs_from_playlist(playlist_link, from_video, to_video):
     console.print("")
 
     # Choose the start and end of videos to download
-    console.print(f"[normal1]There are [normal2]{len(playlist_obj)}[/] videos in the playlist.[/]")
+    console.print(f"[normal1]Playlist: [normal2]{playlist_obj.title}[/][/]")
+    console.print(f"[normal1]There are [normal2]{len(playlist_obj)}[/] videos in this playlist.[/]")
     start_end = get_start_end(len(playlist_obj), from_video, to_video)
     
     if start_end == -1:
         start_end = [1, len(playlist_obj)]
 
-    # Get the playlist's video objects
-    vid_objs = [start_end[0]] # Adding start_count[0] (i.e. first video number) for future use
+    # Adding start_count[0] (i.e. first video number) to the output list
+    vid_objs = [start_end[0]]
+    
+    # Adding the playlist's name to the output list
+    vid_objs.append(playlist_obj.title)
 
+    # Get the playlist's video objects
     for link_num, link in enumerate(playlist_obj[int(start_end[0])-1 : int(start_end[1])]):
         vid_objs.append(vid_link_checker(link))
         if not vid_objs[-1]:
