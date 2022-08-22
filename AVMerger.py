@@ -1,5 +1,4 @@
-import os
-from rich import print as rprint
+from global_imports import *
 
 def avmerger(directory, filename, subtitles=''):
 	input_video  = directory + "\\" + filename + ' (Video).mp4'
@@ -18,7 +17,7 @@ def avmerger(directory, filename, subtitles=''):
 				os.remove(input_subtitles + ".ar.vtt")
 			else:
 				with open(ffmpeg_log) as ffmpeg_logs:
-					rprint(f"[bold red]{ffmpeg_logs.read()}[/]")
+					console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
 				return False
 		elif subtitles == '1':
 			os.system(f"{fixed_part1} -i \"{input_subtitles}\".en.vtt -map 0:v -map 1:a -map 2:s -c:v copy -c:a copy -c:s mov_text -metadata:s:s:0 language=eng {fixed_part2}")
@@ -26,7 +25,7 @@ def avmerger(directory, filename, subtitles=''):
 				os.remove(input_subtitles + ".en.vtt")
 			else:
 				with open(f"\"{directory}\"\\ffmpeglogs.txt") as ffmpeg_logs:
-					print(ffmpeg_logs.read())
+					console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
 				return False
 		else:
 			os.system(f"{fixed_part1} -i \"{input_subtitles}\".ar.vtt -map 0:v -map 1:a -map 2:s -c:v copy -c:a copy -c:s mov_text -metadata:s:s:0 language=ara {fixed_part2}")
@@ -34,7 +33,7 @@ def avmerger(directory, filename, subtitles=''):
 				os.remove(input_subtitles + ".ar.vtt")
 			else:
 				with open(f"\"{directory}\"\\ffmpeglogs.txt") as ffmpeg_logs:
-					print(ffmpeg_logs.read())
+					console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
 				return False
 	else:
 		os.system(f"{fixed_part1} -c copy {fixed_part2}")
@@ -46,14 +45,20 @@ def avmerger(directory, filename, subtitles=''):
 			return True
 		else:
 			with open(f"\"{directory}\"\\ffmpeglogs.txt") as ffmpeg_logs:
-				print(ffmpeg_logs.read())
+				console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
 	return False
 	# else:
-	# 	rprint("[bold plum4 on grey23][bold red]Error[/]: Merged file not found[/]")
+	# 	console.print("[warning1][warning2]Error[/]: Merged file not found[/]")
 	# 	return False
 
 
-## Useful Linls
+if __name__ == "__main__":
+	directory = input("Enter the the video path: ")
+	filename  = input("\nEnter the filename: ")
+
+	avmerger(directory, filename, "12")
+
+## Useful Links
 # -loglevel warning -hide_banner -stats To show progress
 	# Source: https://superuser.com/questions/326629/how-can-i-make-ffmpeg-be-quieter-less-verbose
 # Merge subtitles:
