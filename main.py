@@ -1,31 +1,14 @@
-import Links_and_Objects as lo, Video_Metadata as vmd, Utility as ut
-from rich.console import Console
-from rich.theme import Theme
-import os
+from global_imports import *
 from sys import  argv
 from glob import glob
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-
-custom_theme = Theme({
-    "normal1"       :   "bold blue1 on grey23",
-    "normal2"       :   "bold dark_violet",
-
-    "warning1"      :   "bold plum4 on grey23",
-    "warning2"      :   "bold red",
-    
-    "exists"        :   "bold chartreuse3 on gray23"
-})
-
-console = Console(theme=custom_theme)
+from playsound import playsound
+import Links_and_Objects as lo, Video_Metadata as vmd, Utility as ut
 
 
 
 def download_one_video(video_link):
     # Generate a video object from the user input link
     vid_obj = lo.get_vid_obj(video_link)
-
 
     # Getting the metadata of the video
     vid_streams_dict = vmd.get_vid_metadata(vid_obj)
@@ -71,7 +54,7 @@ def download_one_video(video_link):
         selected_stream = vid_streams_dict[streams_categories[int(selected_streams[0])-1]][int(selected_streams[1])-1]
 
         console.print(f"[normal1]Downloading [normal2]{selected_stream[1]}[/], [normal2]{selected_stream[-4] if merge_option or selected_stream[2] == 'video' else selected_stream[0].abr}[/], [normal2]{selected_stream[-2].strip()}[/]...[/]\n")
-        #ToDo: make checks and use check_stream_existence if possible.
+        
         if not merge_option:
             selected_stream[0].download()
             os.rename(valid_filename + ".mp4", formated_filename + ".mp4")
@@ -87,6 +70,7 @@ def download_one_video(video_link):
 
             # Merging the video & audio streams
             ut.merge_streams(formated_filename, selected_stream[-5])
+            playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
 
 
     # Option_2: Download video description
@@ -106,8 +90,11 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
     start_video_number = 1
     if from_playlist:
         vid_objs = lo.get_vid_objs_from_playlist(playlist_link, from_video, to_video)
-        start_video_number = vid_objs[0]
-        vid_objs.pop(0)
+        start_video_number = vid_objs.pop(0)
+        playlist_name = vid_objs.pop(0)
+        formated_playlist_name = ut.format_name(playlist_name)
+        os.makedirs(formated_playlist_name, exist_ok=True)
+        os.chdir(formated_playlist_name)
     else:
         vid_objs = lo.get_vid_objs_from_file()
 
@@ -197,7 +184,6 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
                 console.print(f"[normal1][normal2]{selected_stream[1]}[/], [normal2]{selected_stream[-4]}[/], [normal2]{selected_stream[-2].strip()}[/][/]")
                 console.print(f"[normal1][normal2]{selected_audio_stream[1]}[/], [normal2]{selected_audio_stream[0].abr}[/], [normal2]{selected_audio_stream[-2].strip()}[/][/]\n")
         console.print(f"[normal1]{'='*42}[/]")
-        ##### console.rule(style=)
         console.print("")
 
     if not len(selected_streams_for_download):
@@ -224,7 +210,10 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
             console.print("[warning1]][warning2]Download[/] aborted...[/]\n")
             return
         
-        ut.download_streams(selected_streams_for_download)
+        ut.download_streams(selected_streams_for_download)  
+        
+
+        playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
 
     if from_playlist:
         console.print("[normal1]Do you want to download [normal2]another playlist[/]? ([normal2]1[/]:yes, [normal2]else[/]:NO): [/]", end="")
@@ -236,38 +225,57 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
 
 
 if __name__ == "__main__":
+    terminal_argument_link = ""
+
     if len(argv) > 1:
-        if argv[1] in ["1", "yes", "y"]:
-            choice = True
+        if argv[1] in ["help", "-h", "--help"]:
+            console.print("""[normal1]python "[normal1]The_Refactored.py" \[[normal2]script_mode[/]] \[[normal2]target_link[/]] \[[normal2]from_video[/]] \[[normal2]to_video[/]]
+
+[normal2]script_mode[/]: [normal2]1[/] -> DOWNLOAD ONE VIDEO  |  [normal2]-1[/] -> use links from a file  |  [normal2]else[/]: download a playlist[/]
+
+[normal2]target_link[/]: A link for a [normal2]single video[/] when downloading [normal2]one video[/].
+             A link for a [normal2]playlist[/] when downloading a [normal2]playlist[/].
+
+[normal2]from_video[/] : The [normal2]video number[/] from where to start downloading when downloading a [normal2]playlist[/].
+
+[normal2]to_video[/]   : The [normal2]video number[/] of the last video you want when downloading a [normal2]playlist[/].[/]""")
+
+            playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
+            choice = -999 # Skip and end the script.
+
+        elif argv[1] in ["1", "yes", "y"]:
+            choice = 1
         elif argv[1] in ["-1", "skip"]:
             choice = -1
         else:
             choice = False
+        
         if len(argv) > 2:
             terminal_argument_link = argv[2]
     else:
         console.print("[normal1]Choose a mode: ([normal2]1[/]:ONE VIDEO  |  [normal2]-1[/]:links from file  |  [normal2]else[/]:playlist): [/]", end="")
         choice = ut.yes_no_choice(blank_true=True)
-        terminal_argument_link = ""
     
-    while True:
-        if choice == -1:
-            continue_option = download_many_videos(from_playlist = False)
-        elif choice:
-            continue_option = download_one_video(video_link = terminal_argument_link)
-        else:
-            if len(argv) > 4:
-                continue_option = download_many_videos(playlist_link = terminal_argument_link, from_video=int(argv[3]), to_video=int(argv[4]))
+    if choice != -999:
+        while True:
+            if choice == 1:
+                continue_option = download_one_video(video_link = terminal_argument_link)
+            elif choice == -1:
+                continue_option = download_many_videos(from_playlist = False)
             else:
-                continue_option = download_many_videos(playlist_link = terminal_argument_link)
-        if(not continue_option):
-            console.print("[normal1][normal2]Exiting[/]... Opening the [normal2]download location[/] and pointing to the [normal2]newest file[/] now...[/]")
-            # os.startfile(os.path.dirname(os.path.abspath(__file__)))
-            list_of_files = glob(os.path.dirname(os.path.abspath(__file__)) + r"\*.mp4") # * means all, for a specific format then *.mp4
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system(f"explorer /select, {latest_file}")
-            break
-        
-        # Clear the previously entered video link and terminal arguments if another iteration is happening:
-        terminal_argument_link = ""
-        argv = [argv[0]]
+                if len(argv) > 4:
+                    continue_option = download_many_videos(playlist_link = terminal_argument_link, from_video=int(argv[3]), to_video=int(argv[4]))
+                else:
+                    continue_option = download_many_videos(playlist_link = terminal_argument_link)
+            if(not continue_option):
+                console.print("[normal1][normal2]Exiting[/]... Opening the [normal2]download location[/] and pointing to the [normal2]newest file[/] now...[/]")
+                # os.startfile(os.getcwd())
+                list_of_files = glob(os.getcwd() + r"\*.mp4") # * means all, for a specific format then *.mp4
+                latest_file = max(list_of_files, key=os.path.getctime)
+                os.system(f"explorer /select, {latest_file}")
+                break
+            
+            # Clear the previously entered video link and terminal arguments if another iteration is happening:
+            terminal_argument_link = ""
+            argv = [argv[0]]
+    # playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/goodbye-old-friend.mp3")
