@@ -31,7 +31,7 @@ You can use this script by downloading Termux. It is available in Play Store and
 - `apt update && apt full-upgrade`
 - `pkg install ffmpeg`
 - `pkg install python`
-- `pip install --update pip`
+- `pip install --upgrade pip`
 - `pip install pytube`
 - `pip install rich`
 - `pip install yt-dlp`
