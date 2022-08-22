@@ -1,6 +1,6 @@
 # Youtube-Downloader
 YouTube video, audio, and playlist downloader with pytube.
-## Why I made this script?
+## Why did I write this script?
 Because of Google. I was using FDM to download videos from Youtube until Google came and caused the FDM team to drop this feature for unknown reasons (a real mystery indeed). Other similar apps and even online websites are there that can download youtube videos, you just have to be content with what they decided to give (or show) you until Google comes again to do its business with them.
 
 Another reason is my need for a fast, easy to use with keyboard method to download videos from youtube and select all the parameters I want.
@@ -10,16 +10,41 @@ Another reason is my need for a fast, easy to use with keyboard method to downlo
 - Download a video stream and an audio stream then merge them with ffmpeg.
 - Download a playlist or a subset of a playlist.
 - Download individual videos from links in a text file.
-- Using the merge option will automaticall download English and Arabic subtitles (auto-generated and manually created).
+- Using the merge option will automatically download English and Arabic subtitles (manually created or auto-generated if the former does not exist).
 - Download video description.
-- Terminal arguments support to skip the input steps.
-## Usage:
-You can either run the script normally in a step-by-step manner and enter what is asked from you, or simply use terminal arguments and skip the input steps. Ex:
-- Step by step: `python "main.py"`
-- With terminal args: `python "main.py" [script_mode] [youtube_link] [start_video_number] [end_video_number]`
+- Terminal arguments support skipping the input steps.
+- Runs in Android (Termux).
 ## Prerequisites:
 - Install ffmpeg. (You can see how to [here](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/))
 - `pip install pytube`
 - ~~`pip install youtube_dl'~~
 - `pip install yt-dlp`
 - `pip install rich`
+- `pip install playsound` to enable the notification sounds.
+## Usage:
+You can either run the script normally in a step-by-step manner and enter what is asked of you or simply use terminal arguments and skip the input steps. Ex:
+- Step by step: `python "main.py"`
+- With terminal args: `python "main.py" [script_mode] [youtube_link] [start_video_number] [end_video_number]`
+## For Android Users:
+You can use this script by downloading Termux. It is available in Play Store and F-Droid, but I highly recommend that you download it from [F-Droid](https://f-droid.org/en/packages/com.termux/) as the Play Store version causes some problems. After Downloading Termux, execute these commands:
+- `termux-setup-storage`
+- `apt update && apt full-upgrade`
+- `pkg install ffmpeg`
+- `pkg install python`
+- `pip install --update pip`
+- `pip install pytube`
+- `pip install rich`
+- `pip install yt-dlp`
+## Bonus Section:
+- If you are using a terminal that supports aliases, you can easily run this script with fewer words, for example: 
+   * `alias ppp=python "E:\...\main.py" $*`
+   * `$*` is used to support arguments.
+- Termux supports aliases, but it requires you to add a `\` before any space or bracket, for example:
+   * `alias ccc=cd\ "/storage/emulated/0/\[My\ Scripts\]\ \[Python\ 3\]/Programming"`.
+   * The destination without backslashes directs to `/storage/emulated/0/[My Scripts] [Python 3]/Programming`.
+- The progress bar used is in the `cli.py` file of the pytube module. To edit it you first need to find where it is located, for that you have two options:
+   * Use some editor like `VS Code` that supports the `Go to the Definition` feature.
+   * Using `pip show <package_name>` which shows information about the installed packages.  
+   
+   After finding the package location, locate the `cli.py` file. Inside, edit the `display_progress_bar` function by modifying the `text` variable:
+     * `text = f"{mbytes_remaining:>7}:{round(filesize/1000/1000, 2)} MB | {progress_bar} | {percent}%\t\t\r"`
