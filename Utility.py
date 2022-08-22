@@ -1,27 +1,10 @@
-import AVMerger as avm
-from rich.console import Console
-from rich.theme import Theme
-
-import os, re
+from AVMerger import *
+import re
 
 # Available functions in this module:
 # ['format_name',    'yes_no_choice',                    'check_stream_existence',
 #  'merge_streams',  'optional_downloads',               'download_subtitles',
 #  'select_streams', 'format_selected_stream_into_dict', 'download_streams']
-
-
-
-custom_theme = Theme({
-    "normal1"       :   "bold blue1 on grey23",
-    "normal2"       :   "bold dark_violet",
-    
-    "warning1"      :   "bold plum4 on grey23",
-    "warning2"      :   "bold red",
-    
-    "exists"        :   "bold chartreuse3 on gray23"
-})
-
-console = Console(theme=custom_theme)
 
 
 # valid_filename:    [<>\"/\\?*:|#\'.,%]
@@ -35,6 +18,7 @@ def format_name(filename, extra_pattern=""):
         new_name    = re.sub('[|]', "-", new_name)
         new_name    = re.sub(' +', ' ', new_name) # remove multiple spaces
     else:
+        # Some of these characters are valid filename characters but pytube omit them from when downloading files.
         new_name    = re.sub('[:|#\'.,%]', "", new_name)
     
     return new_name
@@ -69,11 +53,11 @@ def check_stream_existence(stream_obj, formated_filename, valid_filename, stream
 
 
 def merge_streams(formated_filename, vid_id):
-    console.print("[bold blue1 on grey23]Starting merging...[/]")
+    console.print("[normal1]Starting merging...[/]")
     subtitles = download_subtitles(vid_id, formated_filename)
     try:
-        merge_status = avm.avmerger(   os.path.dirname(os.path.abspath(__file__)),
-                        formated_filename, subtitles)
+        # os.path.dirname(os.path.abspath(__file__))+"\\Downloads"
+        merge_status = avmerger(os.getcwd(), formated_filename, subtitles)
         if not merge_status:
             raise ValueError
     except ValueError:
@@ -205,12 +189,12 @@ def format_selected_stream_into_dict(formated_filename, valid_filename, selected
 def download_streams(selected_streams):
     for stream in selected_streams:
         if 'video' in stream:
-            console.print(f"Downloading {stream['video'][0][0].title}")
-            console.print(f"{stream['video'][0][1]}, {stream['video'][0][-4]}, {stream['video'][0][-2].strip()}...")
+            console.print(f"[normal1]Downloading [normal2]{stream['video'][0][0].title}[/][/]")
+            console.print(f"[normal1][normal2]{stream['video'][0][1]}[/], [normal2]{stream['video'][0][-4]}[/], [normal2]{stream['video'][0][-2].strip()}[/]...[/]")
             check_stream_existence(stream['video'][0][0], stream['video'][1], stream['video'][2], stream['video'][3])
         
         if 'audio' in stream:
-            console.print(f"Downloading {stream['audio'][0][1]}, {stream['audio'][0][0].abr}, {stream['audio'][0][-2].strip()}...")
+            console.print(f"[normal1]Downloading [normal2]{stream['audio'][0][1]}[/], [normal2]{stream['audio'][0][0].abr}[/], [normal2]{stream['audio'][0][-2].strip()}[/]...[/]")
             check_stream_existence(stream['audio'][0][0], stream['audio'][1], stream['audio'][2], stream['audio'][3])
         
         if 'video' in stream and 'audio' in stream:
