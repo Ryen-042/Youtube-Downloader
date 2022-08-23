@@ -1,6 +1,6 @@
 from global_imports import *
 
-def avmerger(directory, filename, subtitles=''):
+def avmerger(directory: str, filename: str, subtitles='') -> bool:
 	input_video  = directory + "/" + filename + ' (Video).mp4'
 	input_audio  = directory + "/" + filename + ' (Audio).mp4'
 	merged_video = directory + "/" + filename + ' (Merged).mp4'
@@ -47,3 +47,15 @@ def avmerger(directory, filename, subtitles=''):
 			with open(f"\"{directory}\"/ffmpeglogs.txt") as ffmpeg_logs:
 				console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
 	return False
+	# else:
+	# 	console.print("[warning1][warning2]Error[/]: Merged file not found[/]")
+	# 	return False
+
+
+## Useful Links
+# -loglevel warning -hide_banner -stats To show progress
+	# Source: https://superuser.com/questions/326629/how-can-i-make-ffmpeg-be-quieter-less-verbose
+# Merge subtitles:
+	# https://gist.github.com/berndverst/8e1b8321926426ded9555c15a2c0c837
+	# https://stackoverflow.com/questions/8672809/use-ffmpeg-to-add-text-subtitles
+	# https://superuser.com/questions/549179/using-ffmpeg-to-add-subtitles-to-a-m4v-video-file

@@ -1,6 +1,7 @@
 from pytube import YouTube, Playlist, request
 from pytube.cli import on_progress as pytube_on_progress
 from global_imports import *
+from typing import Union
 
 
 ## Available functions in this module:
@@ -19,20 +20,31 @@ request.default_range_size = int(9437184/9*5) # 5MB chunk size
 
 
 
-def on_complete(stream, file_path):
+def on_complete(stream, file_path: str) -> None:
     # Print only the path to the downloaded file, not including the file's name as it is changed after downloading.
     path_to_file = '/'.join((file_path.split('/')[:-1]))
     console.print(f"[normal1]File downloaded successfully in the next path: [normal2]{path_to_file}[/][/]\n")
 
 
 
-def on_progress(stream, chunk, bytes_remaining):
+def on_progress(stream, chunk, bytes_remaining: float) -> None:
     console.print(f"[normal1][nprmal2]{round(100 - bytes_remaining/stream.filesize * 100, 2)}[/]% | [normal2]{round((stream.filesize - bytes_remaining)/1000/1000, 2)}[/]:[normal2]{round(stream.filesize/1000/1000, 2)}[/] MB[/]", end="")
+    
+    # To erase and return the curson to the beginning of the current line.
+    # https://stackoverflow.com/questions/5290994/remove-and-replace-printed-items
+
+    # Usage of 'r' leaves the previously printed characters if they are not overridden.
+    # Also, 'r' does not work with console.print().
+    
+    # print('\033[2K\033[1G', end="") # Doesn't work with CMD
+    
+    # In theory, visually speaking, the previously line is equivalent to:
     print("\r", end="")
+    # print(" " * 100, end="\r") # (100) is some arbitrary number.
 
 
 
-def vid_link_checker(link):
+def vid_link_checker(link: str) -> Union[YouTube, bool]:
     try:
         return YouTube(link, on_complete_callback=on_complete, on_progress_callback=pytube_on_progress)
     except:
@@ -40,7 +52,7 @@ def vid_link_checker(link):
 
 
 
-def get_vid_obj(video_link):
+def get_vid_obj(video_link: str) -> YouTube:
     if not video_link:
         console.print("[normal1]Enter a [normal2]link[/] to a YouTube video:[/]", end=" ")
         video_link = input()
@@ -56,7 +68,7 @@ def get_vid_obj(video_link):
 
 
 
-def get_start_end(limit, from_video, to_video):
+def get_start_end(limit: int, from_video: int, to_video: int) -> Union[int, list[int]]:
     if not (from_video and to_video):
         console.print("[normal1]Enter the [normal2]start[/] and [normal2]end[/] of the videos you want to download separated by a [normal2]space[/] or [normal2]leave empty[/] to select all: [/]", end="")
         start_end = input().split(" ")
@@ -64,6 +76,7 @@ def get_start_end(limit, from_video, to_video):
         start_end = [from_video, to_video]
     
     while True:
+        # The user left the input blank, meaning they want to download all the videos in the playlist.
         if len(start_end) == 1 and not start_end[0]:
             return -1
 
@@ -89,7 +102,7 @@ def get_start_end(limit, from_video, to_video):
 
 
 
-def get_vid_objs_from_file(path="individual-video-links.txt"):
+def get_vid_objs_from_file(path="individual-video-links.txt") -> list[YouTube]:
     if not os.path.exists(path):
         with open(path, "w"):
             return []
@@ -105,7 +118,7 @@ def get_vid_objs_from_file(path="individual-video-links.txt"):
 
 
 
-def get_vid_objs_from_playlist(playlist_link, from_video, to_video):
+def get_vid_objs_from_playlist(playlist_link: str, from_video:int, to_video: int) -> list[YouTube]:
     if not playlist_link:
         console.print("[normal1]Enter a [normal2]link[/] to a YouTube playlist: [/]", end="")
         playlist_link = input()
@@ -130,10 +143,10 @@ def get_vid_objs_from_playlist(playlist_link, from_video, to_video):
     if start_end == -1:
         start_end = [1, len(playlist_obj)]
 
-    # Adding start_count[0] (i.e. first video number) for future use
+    # Adding start_count[0] (i.e. first video number) to the output list
     vid_objs = [start_end[0]]
     
-    # Adding the playlist's name for future use
+    # Adding the playlist's name to the output list
     vid_objs.append(playlist_obj.title)
 
     # Get the playlist's video objects

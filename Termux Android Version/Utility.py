@@ -1,4 +1,5 @@
 from AVMerger import *
+from typing import Union
 import re
 
 # Available functions in this module:
@@ -9,7 +10,7 @@ import re
 
 # valid_filename:    [<>\"/\\?*:|#\'.,%]
 # formated_filename: [<>\"/\\?*:|]
-def format_name(filename, extra_pattern=""):
+def format_name(filename: str, extra_pattern="") -> str:
     new_name    = re.sub('[<>\"/\\?*]', "", filename)
     new_name    = new_name.replace("\\", "")
     
@@ -25,15 +26,15 @@ def format_name(filename, extra_pattern=""):
 
 
 
-def yes_no_choice(blank_true=False):
+def yes_no_choice(blank_true=False, third_option=False) -> Union[bool, int]:
     choice = input().lower()
     console.print("")
     
     # blank_true >> return True if the user didn't enter anything
     if choice in ["1", "yes", "y"] or not choice and blank_true:
         return True
-    if choice in ["-1", "skip"]:
-        return -1
+    if third_option and choice in ["2", "skip"]:
+        return 2
     return False
 
 
@@ -53,7 +54,7 @@ def check_stream_existence(stream_obj, formated_filename, valid_filename, stream
 
 
 def merge_streams(formated_filename, vid_id):
-    console.print("[bold blue1 on grey23]Starting merging...[/]")
+    console.print("[normal1]Starting merging...[/]")
     subtitles = download_subtitles(vid_id, formated_filename)
     try:
         merge_status = avmerger(os.getcwd(), formated_filename, subtitles)
@@ -86,6 +87,23 @@ def optional_downloads(formated_filename, option_name, vid_obj):
 def download_subtitles(vid_id, formated_filename):
     if not os.path.isfile(formated_filename + ".en.vtt") and not os.path.isfile(formated_filename + ".ar.vtt"):
         console.print("[normal1]Downloading [normal2]subtitles[/]...[/]")
+        
+        ## useful links: https://github.com/ytdl-org/youtube-dl#subtitle-options
+        #                https://hassanlatif.net/how-to-download-youtube-videos-with-subtitles-using-youtube-dl-646.html
+        ##Subtitle Options:
+        #   --write-sub          Write subtitle file
+        #   --write-auto-sub     Write automatic subtitle file (YouTube only)
+        #   --all-subs           Download all the subtitles provided by the owner of the video
+        #   --list-subs          List all available subtitles for the video
+        #   --sub-format FORMAT  Subtitle format, accepts formats preference, for example: "srt" or "ass/srt/best"
+        #   --sub-lang LANGS     Languages of the subtitles to download (optional) separated by commas, use IETF language tags like 'en,pt'
+        ## Download specific subtitles:
+        #   youtube-dl --write-sub --sub-lang ar,en --skip-download "download_link" -o "filename"
+        ## Download specific subtitles provided by the owner of the video + the auto generated subtitles:
+        #   youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download "https://www.youtube.com/watch?v=MZS1F0Hp28A" -o "ff"
+
+        # os.system(f"youtube-dl --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"https://www.youtube.com/watch?v={vid_id}\" -o \"{formated_filename}\"")
+
         os.system(f"yt-dlp --write-sub --write-auto-sub --sub-lang ar,en --skip-download \"https://www.youtube.com/watch?v={vid_id}\" -o \"{formated_filename}\"")
     else:
         console.print("[exists][normal2]Subtitles[/] already downloaded.[/]\n")
@@ -146,7 +164,7 @@ def select_streams(merge_option, categories_lengths, skip_not_stop = True, res_o
 
 
 
-def format_selected_stream_into_dict(formated_filename, valid_filename, selected_video_stream=None, selected_audio_stream=None, merge_option=False):
+def format_selected_stream_into_dict(formated_filename: str, valid_filename: str, selected_video_stream=None, selected_audio_stream=None, merge_option=False) -> dict:
     if merge_option:
         selected_streams = {
             "video": [selected_video_stream, formated_filename, valid_filename, "video"],
@@ -168,7 +186,7 @@ def format_selected_stream_into_dict(formated_filename, valid_filename, selected
 
 
 
-def download_streams(selected_streams):
+def download_streams(selected_streams: list) -> None:
     for stream in selected_streams:
         if 'video' in stream:
             console.print(f"[normal1]Downloading [normal2]{stream['video'][0][0].title}[/][/]")
@@ -183,3 +201,20 @@ def download_streams(selected_streams):
             merge_streams(stream['video'][1], stream['video'][0][-5])
         console.print(f"[normal1]{'='*20}[/]")
         console.print("")
+
+
+# if __name__ == '__main__':
+    # pass
+
+
+# from pytube import YouTube
+# from Video_Metadata import print_streams, get_vid_metadata
+
+# if __name__ == "__main__":
+#     ## vid_obj = YouTube("https://www.youtube.com/watch?v=eB4rx_XNHqE")
+#     vid_obj = YouTube("https://www.youtube.com/watch?v=5Wj4t89-K-8")
+#     streams_dict = get_vid_metadata(vid_obj)
+#     categories_lengths = print_streams(streams_dict)
+# ##     console.print(categories_lengths)
+# ##     select_streams(True, categories_lengths, "Hello")
+
