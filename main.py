@@ -6,7 +6,7 @@ import Links_and_Objects as lo, Video_Metadata as vmd, Utility as ut
 
 
 
-def download_one_video(video_link):
+def download_one_video(video_link: str) -> bool:
     # Generate a video object from the user input link
     vid_obj = lo.get_vid_obj(video_link)
 
@@ -85,7 +85,7 @@ def download_one_video(video_link):
 
 
 
-def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_video=0):
+def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_video=0) -> bool:
     # Generate video objects from the (playlist input link/filepath containing video links)
     start_video_number = 1
     if from_playlist:
@@ -147,7 +147,7 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
         # if "video/mp4" in vid_streams_dict and "audio/mp4" in vid_streams_dict:
         #     console.print("[normal1]Download [normal2]video[/] & [normal2]audio[/] streams and merge them with ffmpeg?[/]")
         #     console.print("[normal1]Available options: ([normal2]1[/]:YES  |  [normal2]2/skip[/]:break  |  [normal2]else[/]:no): [/]", end="")
-        #     merge_option = ut.yes_no_choice(blank_true=True)
+        #     merge_option = ut.yes_no_choice(blank_true=True, third_option=True)
         
         # this is to skip the merge_option input process because it is unnecessary for me.
         merge_option = True
@@ -206,21 +206,18 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
         console.print(f"[normal1]Total size:     [normal2]{round(total_size, 2)}[/] MB[/]")
         console.print(f"[normal1]Total Duration: [normal2]{total_duration[0]}[/]:[normal2]{total_duration[1]}[/] min{'s' if int(total_duration[0])>1 else ''}[/]")
         console.print("[normal1]Confirm? ([normal2]1[/]:YES, [normal2]else[/]:no): [/]", end="")
-        if not ut.yes_no_choice(blank_true=True):
+        if ut.yes_no_choice(blank_true=True):
+            ut.download_streams(selected_streams_for_download)
+            playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
+        else:
             console.print("[warning1]][warning2]Download[/] aborted...[/]\n")
-            return
-        
-        ut.download_streams(selected_streams_for_download)  
-        
-
-        playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
 
     if from_playlist:
         console.print("[normal1]Do you want to download [normal2]another playlist[/]? ([normal2]1[/]:yes, [normal2]else[/]:NO): [/]", end="")
         continue_option = ut.yes_no_choice()
         return continue_option
-    console.print("[normal1]Download finished successfully! Enter anything to end the script: [/]", end="")
-    input()
+    else:
+        return False
 
 
 
@@ -256,7 +253,7 @@ if __name__ == "__main__":
             terminal_argument_link = argv[2]
     else:
         console.print("[normal1]Choose a mode: ([normal2]1[/]:ONE VIDEO  |  [normal2]2[/]:links from file  |  [normal2]else[/]:playlist): [/]", end="")
-        choice = ut.yes_no_choice(blank_true=True)
+        choice = ut.yes_no_choice(blank_true=True, third_option=True)
     
     if choice != -999:
         while True:
