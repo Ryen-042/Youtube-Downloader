@@ -75,6 +75,7 @@ def get_start_end(limit, from_video, to_video):
         start_end = [from_video, to_video]
     
     while True:
+        # The user left the input blank, meaning they want to download all the videos in the playlist.
         if len(start_end) == 1 and not start_end[0]:
             return -1
 
