@@ -1,6 +1,6 @@
 from global_imports import *
 
-def avmerger(directory, filename, subtitles=''):
+def avmerger(directory: str, filename: str, subtitles='') -> bool:
 	input_video  = directory + "\\" + filename + ' (Video).mp4'
 	input_audio  = directory + "\\" + filename + ' (Audio).mp4'
 	merged_video = directory + "\\" + filename + ' (Merged).mp4'
@@ -55,8 +55,12 @@ def avmerger(directory, filename, subtitles=''):
 if __name__ == "__main__":
 	directory = input("Enter the the video path: ")
 	filename  = input("\nEnter the filename: ")
-
+	
 	avmerger(directory, filename, "12")
+
+
+# os.system(f"{fixed_part1} -c copy \"{merged_video}\"")
+
 
 ## Useful Links
 # -loglevel warning -hide_banner -stats To show progress
