@@ -32,8 +32,8 @@ def yes_no_choice(blank_true=False):
     # blank_true >> return True if the user didn't enter anything
     if choice in ["1", "yes", "y"] or not choice and blank_true:
         return True
-    if choice in ["-1", "skip"]:
-        return -1
+    if choice in ["2", "skip"]:
+        return 2
     return False
 
 
