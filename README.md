@@ -26,8 +26,10 @@ You can either run the script normally in a step-by-step manner and enter what i
 - Step by step: `python "main.py"`
 - With terminal args: `python "main.py" [script_mode] [youtube_link] [start_video_number] [end_video_number]`
 ## For Android Users:
-You can use this script by downloading Termux. It is available in Play Store and F-Droid, but I highly recommend that you download it from [F-Droid](https://f-droid.org/en/packages/com.termux/) as the Play Store version causes some problems. After Downloading Termux, execute these commands:
-- `termux-setup-storage`
+You can use this script by downloading Termux. It is available in Play Store and F-Droid, but I highly recommend that you download it from [F-Droid](https://f-droid.org/en/packages/com.termux/) as the Play Store version causes some problems.  
+
+After Downloading Termux, execute these commands:
+- `termux-setup-storage` to get storage permissions.
 - `apt update && apt full-upgrade`
 - `pkg install ffmpeg`
 - `pkg install python`
