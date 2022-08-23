@@ -1,4 +1,5 @@
 from AVMerger import *
+from typing import Union
 import re
 
 # Available functions in this module:
@@ -9,7 +10,7 @@ import re
 
 # valid_filename:    [<>\"/\\?*:|#\'.,%]
 # formated_filename: [<>\"/\\?*:|]
-def format_name(filename, extra_pattern=""):
+def format_name(filename: str, extra_pattern="") -> str:
     new_name    = re.sub('[<>\"/\\?*]', "", filename)
     new_name    = new_name.replace("\\", "")
     
@@ -25,14 +26,14 @@ def format_name(filename, extra_pattern=""):
 
 
 
-def yes_no_choice(blank_true=False):
+def yes_no_choice(blank_true=False, third_option=False) -> Union[bool, int]:
     choice = input().lower()
     console.print("")
     
     # blank_true >> return True if the user didn't enter anything
     if choice in ["1", "yes", "y"] or not choice and blank_true:
         return True
-    if choice in ["2", "skip"]:
+    if third_option and choice in ["2", "skip"]:
         return 2
     return False
 
@@ -164,7 +165,7 @@ def select_streams(merge_option, categories_lengths, skip_not_stop = True, res_o
 
 
 
-def format_selected_stream_into_dict(formated_filename, valid_filename, selected_video_stream=None, selected_audio_stream=None, merge_option=False):
+def format_selected_stream_into_dict(formated_filename: str, valid_filename: str, selected_video_stream=None, selected_audio_stream=None, merge_option=False) -> dict:
     if merge_option:
         selected_streams = {
             "video": [selected_video_stream, formated_filename, valid_filename, "video"],
@@ -186,7 +187,7 @@ def format_selected_stream_into_dict(formated_filename, valid_filename, selected
 
 
 
-def download_streams(selected_streams):
+def download_streams(selected_streams: list) -> None:
     for stream in selected_streams:
         if 'video' in stream:
             console.print(f"[normal1]Downloading [normal2]{stream['video'][0][0].title}[/][/]")
