@@ -146,18 +146,18 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
         # merge_option = False
         # if "video/mp4" in vid_streams_dict and "audio/mp4" in vid_streams_dict:
         #     console.print("[normal1]Download [normal2]video[/] & [normal2]audio[/] streams and merge them with ffmpeg?[/]")
-        #     console.print("[normal1]Available options: ([normal2]1[/]:YES  |  [normal2]-1[/]:break  |  [normal2]else[/]:no): [/]", end="")
+        #     console.print("[normal1]Available options: ([normal2]1[/]:YES  |  [normal2]2/skip[/]:break  |  [normal2]else[/]:no): [/]", end="")
         #     merge_option = ut.yes_no_choice(blank_true=True)
         
         # this is to skip the merge_option input process because it is unnecessary for me.
         merge_option = True
-
+        
         selected_streams = []
-        if merge_option == -1: # i.e., 'skip'
-                break
-        else:
-            # Choices >> [Categories and resolutions]
-            selected_streams = ut.select_streams(merge_option,  categories_lengths, res_only = True)
+        # if merge_option == 2: # i.e., 'skip'
+        #         break
+        # else:
+        # Choices >> [Categories and resolutions]
+        selected_streams = ut.select_streams(merge_option,  categories_lengths, res_only = True)
         
         if(selected_streams[0]): # if not empty
             # [video/mp4, audio/mp4, ...]
@@ -229,38 +229,40 @@ if __name__ == "__main__":
 
     if len(argv) > 1:
         if argv[1] in ["help", "-h", "--help"]:
-            console.print("""[normal1]python "[normal1]The_Refactored.py" \[[normal2]script_mode[/]] \[[normal2]target_link[/]] \[[normal2]from_video[/]] \[[normal2]to_video[/]]
+            console.print("""
+[normal1]python "[normal1]The_Refactored.py" \[[normal2]script_mode[/]] \[[normal2]target_link[/]] \[[normal2]from_video[/]] \[[normal2]to_video[/]]
 
-[normal2]script_mode[/]: [normal2]1[/] -> DOWNLOAD ONE VIDEO  |  [normal2]-1[/] -> use links from a file  |  [normal2]else[/]: download a playlist[/]
+[normal2]script_mode[/] : [normal2]1/blank[/] -> download one video
+            : [normal2]2[/]       -> fetch links from a file
+            : [normal2]else[/]    -> download a playlist[/]
 
-[normal2]target_link[/]: A link for a [normal2]single video[/] when downloading [normal2]one video[/].
-             A link for a [normal2]playlist[/] when downloading a [normal2]playlist[/].
+[normal2]target_link[/] : A link for a [normal2]single video[/] when downloading [normal2]one video[/].
+            : A link for a [normal2]playlist[/] when downloading a [normal2]playlist[/].
 
-[normal2]from_video[/] : The [normal2]video number[/] from where to start downloading when downloading a [normal2]playlist[/].
+[normal2]from_video[/]  : The [normal2]video number[/] from where to start downloading when downloading a [normal2]playlist[/].
 
-[normal2]to_video[/]   : The [normal2]video number[/] of the last video you want when downloading a [normal2]playlist[/].[/]""")
-
-            playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
+[normal2]to_video[/]    : The [normal2]video number[/] of the last video you want when downloading a [normal2]playlist[/].[/]""")
+            
             choice = -999 # Skip and end the script.
 
         elif argv[1] in ["1", "yes", "y"]:
             choice = 1
-        elif argv[1] in ["-1", "skip"]:
-            choice = -1
+        elif argv[1] == "2":
+            choice = 2
         else:
             choice = False
         
         if len(argv) > 2:
             terminal_argument_link = argv[2]
     else:
-        console.print("[normal1]Choose a mode: ([normal2]1[/]:ONE VIDEO  |  [normal2]-1[/]:links from file  |  [normal2]else[/]:playlist): [/]", end="")
+        console.print("[normal1]Choose a mode: ([normal2]1[/]:ONE VIDEO  |  [normal2]2[/]:links from file  |  [normal2]else[/]:playlist): [/]", end="")
         choice = ut.yes_no_choice(blank_true=True)
     
     if choice != -999:
         while True:
             if choice == 1:
                 continue_option = download_one_video(video_link = terminal_argument_link)
-            elif choice == -1:
+            elif choice == 2:
                 continue_option = download_many_videos(from_playlist = False)
             else:
                 if len(argv) > 4:
