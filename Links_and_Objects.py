@@ -1,8 +1,10 @@
 from pytube import YouTube, Playlist, request
 from pytube.cli import on_progress as pytube_on_progress
 from global_imports import *
-from typing import Union
 
+from typing import Union
+# For type hinting only
+from pytube.streams import Stream
 
 ## Available functions in this module:
 # ['on_complete',  'on_progress',   'vid_link_checker',
@@ -20,14 +22,38 @@ request.default_range_size = int(9437184/9*5) # 5MB chunk size
 
 
 
-def on_complete(stream, file_path: str) -> None:
+def on_complete(stream: Stream, file_path: str) -> None:
+    """
+    ### Description:
+        Called at the end of the execution of the `Stream.download()` method.
+
+    ### Parameters:
+        - `stream`    -> `Stream`.
+        - `file_path` -> `str`:
+            The path to the downloaded stream.
+
+    ### Returns: `None`.
+    """
+
     # Print only the path to the downloaded file, not including the file's name as it is changed after downloading.
     path_to_file = '\\'.join((file_path.split('\\')[:-1]))
     console.print(f"[normal1]File downloaded successfully in the next path: [normal2]{path_to_file}[/][/]\n")
 
 
 
-def on_progress(stream, chunk, bytes_remaining: float) -> None:
+def on_progress(stream: Stream, chunk: bytes, bytes_remaining: int) -> None:
+    """
+    ### Description:
+        Called after downloading a new chunk of data to print out a progress bar.
+
+    ### Parameters:
+        - `stream`          -> `Stream`.        
+        - `chunk`           -> `bytes`.
+        - `bytes_remaining` -> `int`.
+
+    ### Returns: `None`.
+    """
+
     console.print(f"[normal1][nprmal2]{round(100 - bytes_remaining/stream.filesize * 100, 2)}[/]% | [normal2]{round((stream.filesize - bytes_remaining)/1000/1000, 2)}[/]:[normal2]{round(stream.filesize/1000/1000, 2)}[/] MB[/]", end="")
     
     # To erase and return the curson to the beginning of the current line.
@@ -45,6 +71,18 @@ def on_progress(stream, chunk, bytes_remaining: float) -> None:
 
 
 def vid_link_checker(link: str) -> Union[YouTube, bool]:
+    """
+    ### Description:
+        Checks if the provided link is valid and returns a `YouTube` object if so, otherwise returns `False`.
+
+    ### Parameters:
+        - `link` -> `str`:
+            A link to a youtube video.
+
+    ### Returns:
+        A `Youtube` object if the provided `link` is valid, otherwise `False`.
+    """
+
     try:
         return YouTube(link, on_complete_callback=on_complete, on_progress_callback=pytube_on_progress)
     except:
@@ -52,7 +90,19 @@ def vid_link_checker(link: str) -> Union[YouTube, bool]:
 
 
 
-def get_vid_obj(video_link: str) -> YouTube:
+def get_vid_obj(video_link = "") -> YouTube:
+    """
+    ### Description:
+        If no argument is provided, asks the user for a youtube link, checks if it is valid then returns a `YouTube` object if so,
+        otherwise asks the user again for a new link.
+
+    ### Parameters:
+        - `link` -> `str`:
+            A link to a youtube video.
+
+    ### Returns: A `Youtube` object.
+    """
+
     if not video_link:
         console.print("[normal1]Enter a [normal2]link[/] to a YouTube video:[/]", end=" ")
         video_link = input()
@@ -68,7 +118,24 @@ def get_vid_obj(video_link: str) -> YouTube:
 
 
 
-def get_start_end(limit: int, from_video: int, to_video: int) -> Union[int, list[int]]:
+def get_start_end(limit: int, from_video: int=0, to_video: int=0) -> list[int]:
+    """
+    ### Description:
+        Takes two optional numbers representing from where to start and end downloading videos from a playlist.
+        If no numbers are given or if they are not valid numbers, ask the user again.
+
+    ### Parameters:
+        - `limit`      -> `int`:
+            The count of the videos in the playlist.
+        - `from_video` -> `int`:
+            The start video number to start downloading from.
+        - `to_video`   -> `int`:
+            The number of the last video to download.
+
+    ### Returns: 
+        A list containing two numbers representing the first and last video numbers.
+    """
+
     if not (from_video and to_video):
         console.print("[normal1]Enter the [normal2]start[/] and [normal2]end[/] of the videos you want to download separated by a [normal2]space[/] or [normal2]leave empty[/] to select all: [/]", end="")
         start_end = input().split(" ")
@@ -78,7 +145,7 @@ def get_start_end(limit: int, from_video: int, to_video: int) -> Union[int, list
     while True:
         # The user left the input blank, meaning they want to download all the videos in the playlist.
         if len(start_end) == 1 and not start_end[0]:
-            return -1
+            return [1, limit]
 
         elif len(start_end) == 2:
             try:
@@ -103,6 +170,17 @@ def get_start_end(limit: int, from_video: int, to_video: int) -> Union[int, list
 
 
 def get_vid_objs_from_file(path="individual-video-links.txt") -> list[YouTube]:
+    """
+    ### Description:
+        Get video links from a file and return a `YouTube` object for each valid link.
+
+    ### Parameters:
+        - `path` -> `str`:
+            The path to the file containing the video links.
+
+    ### Returns: A list of `YouTube` objects.
+    """
+
     if not os.path.exists(path):
         with open(path, "w"):
             return []
@@ -118,7 +196,23 @@ def get_vid_objs_from_file(path="individual-video-links.txt") -> list[YouTube]:
 
 
 
-def get_vid_objs_from_playlist(playlist_link: str, from_video:int, to_video: int) -> list[YouTube]:
+def get_vid_objs_from_playlist(playlist_link: str, from_video: int=0, to_video: int=0) -> list[YouTube]:
+    """
+    ### Description:
+        Takes a link for a playlist and returns a list of `YouTube` video objects
+        in the specified range between `from_video` and `to_video`.
+
+    ### Parameters:
+        - `playlist_link` -> `str`:
+            A link for a youtube playlist.
+        - `from_video`    -> `int`:
+            The start video number to start downloading from.
+        - `to_video`      -> `int`:
+            The number of the last video to download.
+
+    ### Returns: A list of `YouTube` objects.
+    """
+
     if not playlist_link:
         console.print("[normal1]Enter a [normal2]link[/] to a YouTube playlist: [/]", end="")
         playlist_link = input()
@@ -137,11 +231,8 @@ def get_vid_objs_from_playlist(playlist_link: str, from_video:int, to_video: int
 
     # Choose the start and end of videos to download
     console.print(f"[normal1]Playlist: [normal2]{playlist_obj.title}[/][/]")
-    console.print(f"[normal1]There are [normal2]{len(playlist_obj)}[/] videos in this playlist.[/]")
+    console.print(f"[normal1]There are [normal2]{len(playlist_obj)}[/] videos in this playlist.[/]\n")
     start_end = get_start_end(len(playlist_obj), from_video, to_video)
-    
-    if start_end == -1:
-        start_end = [1, len(playlist_obj)]
 
     # Adding start_count[0] (i.e. first video number) to the output list
     vid_objs = [start_end[0]]
@@ -150,7 +241,7 @@ def get_vid_objs_from_playlist(playlist_link: str, from_video:int, to_video: int
     vid_objs.append(playlist_obj.title)
 
     # Get the playlist's video objects
-    for link_num, link in enumerate(playlist_obj[int(start_end[0])-1 : int(start_end[1])]):
+    for link_num, link in enumerate(playlist_obj[start_end[0]-1 : start_end[1]]):
         vid_objs.append(vid_link_checker(link))
         if not vid_objs[-1]:
             console.print(f"\n[warning1][warning2]Error[/] encountered with video number [warning2]{start_end[0] + link_num}[/]: [warning2]{link}[/][/]")
