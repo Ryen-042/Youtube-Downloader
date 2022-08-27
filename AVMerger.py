@@ -1,12 +1,30 @@
 from global_imports import *
+import shutil
 
 def avmerger(directory: str, filename: str, subtitles='') -> bool:
+	"""
+    ### Description:
+        Merge stream files along with subtitles.
+
+    ### Parameters:
+        - `directory` -> `str`:
+            The path of the directory containing all the files.
+		- `filename` -> `str`:
+			The name of all the files the files that will be merged together.
+		- `subtitles` -> `str`:
+			A string containing a number corresponding to a subtitles downloaded in a specific language.
+
+    ### Returns:
+        Whether the merge operation is successful or not.
+    """
+
 	input_video  = directory + "\\" + filename + ' (Video).mp4'
 	input_audio  = directory + "\\" + filename + ' (Audio).mp4'
 	merged_video = directory + "\\" + filename + ' (Merged).mp4'
-	ffmpeg_log   = f"{directory}\\ffmpeglogs.txt"
+	ffmpeg_log   = directory + "\\ffmpeg-logs.txt"
+	ffmpeg_log_copy = directory + "\\" + filename + ", ffmpeg-logs.txt"
 	fixed_part1  = f"ffmpeg -loglevel error -hide_banner -nostats -i \"{input_video}\" -i \"{input_audio}\""
-	fixed_part2  = f"\"{merged_video}\" 2> \"{directory}\\ffmpeglogs.txt\""
+	fixed_part2  = f"\"{merged_video}\" 2> \"{directory}\\ffmpeg-logs.txt\""
 	if subtitles:
 		input_subtitles = directory + "\\" + filename
 		
@@ -15,36 +33,25 @@ def avmerger(directory: str, filename: str, subtitles='') -> bool:
 			if os.stat(ffmpeg_log).st_size == 0:
 				os.remove(input_subtitles + ".en.vtt")
 				os.remove(input_subtitles + ".ar.vtt")
-			else:
-				with open(ffmpeg_log) as ffmpeg_logs:
-					console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
-				return False
 		elif subtitles == '1':
 			os.system(f"{fixed_part1} -i \"{input_subtitles}\".en.vtt -map 0:v -map 1:a -map 2:s -c:v copy -c:a copy -c:s mov_text -metadata:s:s:0 language=eng {fixed_part2}")
 			if os.stat(ffmpeg_log).st_size == 0:
 				os.remove(input_subtitles + ".en.vtt")
-			else:
-				with open(f"\"{directory}\"\\ffmpeglogs.txt") as ffmpeg_logs:
-					console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
-				return False
 		else:
 			os.system(f"{fixed_part1} -i \"{input_subtitles}\".ar.vtt -map 0:v -map 1:a -map 2:s -c:v copy -c:a copy -c:s mov_text -metadata:s:s:0 language=ara {fixed_part2}")
 			if os.stat(ffmpeg_log).st_size == 0:
 				os.remove(input_subtitles + ".ar.vtt")
-			else:
-				with open(f"\"{directory}\"\\ffmpeglogs.txt") as ffmpeg_logs:
-					console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
-				return False
 	else:
 		os.system(f"{fixed_part1} -c copy {fixed_part2}")
-	
+
 	if os.path.isfile(merged_video):
 		if os.stat(ffmpeg_log).st_size == 0:
 			os.remove(input_video)
 			os.remove(input_audio)
 			return True
 		else:
-			with open(f"\"{directory}\"\\ffmpeglogs.txt") as ffmpeg_logs:
+			shutil.copy(ffmpeg_log, ffmpeg_log_copy)
+			with open(ffmpeg_log) as ffmpeg_logs:
 				console.print(f"[warning2]{ffmpeg_logs.read()}[/]")
 	return False
 	# else:
@@ -55,11 +62,7 @@ def avmerger(directory: str, filename: str, subtitles='') -> bool:
 if __name__ == "__main__":
 	directory = input("Enter the the video path: ")
 	filename  = input("\nEnter the filename: ")
-	
 	avmerger(directory, filename, "12")
-
-
-# os.system(f"{fixed_part1} -c copy \"{merged_video}\"")
 
 
 ## Useful Links
