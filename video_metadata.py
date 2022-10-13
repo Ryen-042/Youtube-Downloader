@@ -87,7 +87,7 @@ def get_vid_metadata(vid_obj: YouTube, mp4_only = False) -> dict[str, list[list]
         # Sometimes, one or more streams for are corrupted, their sizes are unknown and raises an error when accessed, and
         # cannot be downloaded (but some other data are accessable).
         try:
-            file_size = round(stream.filesize/1000/1000, 2) # Size in MBs
+            file_size = round(stream.filesize/1024/1024, 2) # Size in MBs
         except:
             file_size = 0.001 # If the stream is corrupted, store its file_size as 0.001 MB
         str_file_size = ""
@@ -96,7 +96,7 @@ def get_vid_metadata(vid_obj: YouTube, mp4_only = False) -> dict[str, list[list]
             # continue
         
         if file_size > 1023:
-            str_file_size = f"{round(file_size/1000, 2):7.2f} GB"
+            str_file_size = f"{round(file_size/1024, 2):7.2f} GB"
         else:   str_file_size = f"{file_size:7.2f} MB"
         
         vid_augmented_streams_list.append([stream, vid_obj.video_id, str_file_size, file_size])
