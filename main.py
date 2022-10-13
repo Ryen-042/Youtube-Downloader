@@ -1,140 +1,149 @@
-from global_imports import *
+"""
+This is the main entry point for the entire script.
+"""
+
 from sys import  argv
 from glob import glob
+from global_imports import *
 from playsound import playsound
-import Links_and_Objects as lo, Video_Metadata as vmd, Utility as ut
-
-
+import youtube_object_helper as yoh
+import video_metadata as vmd
+import download_helper as dh
+import tui_helper as tui
+from datetime import datetime as dt
 
 def download_one_video(video_link: str) -> bool:
     """
-    ### Description:
+    Description:
         Download only one video (two streams if `merge_option` is `True`, otherwise only one stream).
-
-    ### Parameters:
-        - `video_link` -> `str`:
+    ---
+    Parameters:
+        `video_link` (`str`)
             A link to a youtube video.
-
-    ### Returns:
-        Whether to continue the script with the same mode or end it.
+    ---
+    Returns:
+        (`bool`) => Whether to continue the script with the same mode or end it.
     """
-
-    # Generate a video object from the user input link
-    vid_obj = lo.get_vid_obj(video_link)
-
-    # Remove stupid colons and unsupported characters for a filename
-    valid_filename    = ut.format_name(vid_obj.title, pytube_format=True)
-    if vid_obj.title[0].isnumeric() or vid_obj.title.split(" ", maxsplit=1)[0].lower() == "part":
-        formated_filename = ut.format_name(vid_obj.title.split(" ", maxsplit=1)[1])
-    else:
-        formated_filename = ut.format_name(vid_obj.title)
     
-    # Check if the video is already downloaded before doing anything
+    # Createing a video object from the user input link
+    vid_obj = yoh.get_vid_obj(video_link)
+    
+    # Removing stupid colons and unsupported characters for a filename
+    valid_filename    = dh.format_name(vid_obj.title, pytube_format=True)
+    # if vid_obj.title[0].isnumeric() or vid_obj.title[1].isnumeric() or vid_obj.title.split(" ", maxsplit=1)[0].lower() == "part":
+        # formated_filename = dh.format_name(vid_obj.title.split(" ", maxsplit=1)[1])
+    # else:
+    formated_filename = dh.format_name(vid_obj.title)
+    
+    # Checking if the video is already downloaded before doing anything
     if os.path.isfile(formated_filename + " (Merged).mp4"):
-        console.print("[exists]This [normal2]video[/] is already downloaded[/]")
-        console.print("[normal1]Do you want to download another [normal2]video[/]? ([normal2]1[/]:yes, [normal2]else[/]:NO): [/]", end="")
-        continue_option = ut.yes_no_choice()
-        return continue_option != 0
+        console.print("[exists]This [normal2]video[/] is already downloaded[/]\n")
+        continue_option_choice = tui.issue_yes_no_question("Download another video?")
+        console.print("")
+        return continue_option_choice != 0
     
     # Getting the metadata of the video
     vid_streams_dict = vmd.get_vid_metadata(vid_obj)
-
-    console.print(f"[normal1]Video Title: [normal2]{vid_obj.title}[/][/]")
+    
+    console.print(f"[normal1]Video Title : [normal2]{vid_obj.title}[/][/]")
     vid_duration = divmod(vid_obj.length, 60)
-    console.print(f"[normal1]Duration   : [normal2]{vid_duration[0]:02}[/]:[normal2]{vid_duration[1]:02}[/] min{'s' if vid_duration[0] > 1 else ''}[/]\n")
-
-
-    console.print("[normal1] A list of all the [normal2]available streams[/] is being fetched...[/]\n")
-
-    # printing the available streams
+    console.print(f"[normal1]Duration    : [normal2]{vid_duration[0]:02}[/]:[normal2]{vid_duration[1]:02}[/] min{'s' if vid_duration[0] > 1 else ''}[/]", end="  |  ")
+    console.print(f"[normal1]Release Date: [normal2]{vid_obj.publish_date.strftime('%m/%d/%Y')}[/][/]\n")
+    console.print("[normal1]A list of all the [normal2]available streams[/] is being fetched...[/]\n")
+    
+    # Printing the available streams
     console.print("[normal1]Available [normal2]streams[/] are:[/]")
     console.print(f"[normal1]{'='*22}[/]")
     
-    # categories_lengths = [number_of_categories, [number of streams in each category]]
+    # Returns the number of streams in each category
     categories_lengths = vmd.print_streams(vid_streams_dict)
     
-
-    # Option_1: Download video & audio streams then merge them with ffmpeg
-    merge_option = 0
-    if "video/mp4" in vid_streams_dict and "audio/mp4" in vid_streams_dict:
-        console.print("[normal1]Download [normal2]video[/] & [normal2]audio[/] streams and merge them with ffmpeg? ([normal2]1[/]:YES, [normal2]else[/]:no): [/]", end="")
-        merge_option = ut.yes_no_choice(blank_true=True)
+    # Option_1: Downloading a video & an audio streams then mergeing them with ffmpeg
+    # merge_option = 0
+    # if "video/mp4" in vid_streams_dict and "audio/mp4" in vid_streams_dict:
+    merge_option = tui.issue_yes_no_question("Download two separate streams then merge them?", 1, [1, 2], ["One stream", "Two streams"], [1, 2])
+    console.print("")
     
-    selected_streams = []
+    selected_streams_pointers = []
     # Choices >> [Categories and resolutions] >> Ex: [1, 5, 4, 1]
-    selected_streams = ut.select_streams(merge_option,  categories_lengths, False)
-
-    if(selected_streams[0]): # If the only item != 0
+    selected_streams_pointers = dh.select_streams(merge_option,  categories_lengths, False)
+    
+    if selected_streams_pointers[0]: # If the only item != 0
         # ["video/mp4", "audio/mp4", ...]
         streams_categories = list(vid_streams_dict.keys())
-        selected_stream = vid_streams_dict[streams_categories[selected_streams[0]-1]][selected_streams[1]-1]
-
-        console.print(f"[normal1]Downloading [normal2]{selected_stream[0].mime_type}[/], [normal2]{selected_stream[0].resolution if merge_option or selected_stream[0].type == 'video' else selected_stream[0].abr}[/], [normal2]{selected_stream[2].strip()}[/]...[/]")
+        selected_stream = vid_streams_dict[streams_categories[selected_streams_pointers[0]-1]][selected_streams_pointers[1]-1]
         
-        if not merge_option:
-            selected_stream[0].download()
-            os.rename(valid_filename + ".mp4", formated_filename + ".mp4")
-
-        else:
-            # Video stream
-            ut.check_stream_existence(selected_stream[0], formated_filename, valid_filename)
-
-            # Audio stream
-            selected_stream = vid_streams_dict[streams_categories[selected_streams[2]-1]][selected_streams[3]-1]
-            console.print(f"[normal1]Downloading [normal2]{selected_stream[0].mime_type}[/], [normal2]{selected_stream[0].abr}[/], [normal2]{selected_stream[2].strip()}[/]...[/]")
-            ut.check_stream_existence(selected_stream[0], formated_filename, valid_filename)
-
-
+        console.print(f"[normal1]Downloading [normal2]{selected_stream[0].mime_type}[/], [normal2]{selected_stream[0].resolution if selected_stream[0].type == 'video' else selected_stream[0].abr}[/], [normal2]{selected_stream[2].strip()}[/]...[/]")
+        
+        # Downloading one stream (the first in case of merge_option)
+        dh.check_stream_existence(selected_stream[0], formated_filename, valid_filename)
+        
+        # Downloading two streams
+        if merge_option:
+            selected_stream = vid_streams_dict[streams_categories[selected_streams_pointers[2]-1]][selected_streams_pointers[3]-1]
+            console.print(f"[normal1]Downloading [normal2]{selected_stream[0].mime_type}[/], [normal2]{selected_stream[0].abr if selected_stream[0].type == 'audio' else selected_stream[0].resolution}[/], [normal2]{selected_stream[2].strip()}[/]...[/]")
+            dh.check_stream_existence(selected_stream[0], formated_filename, valid_filename)
+            
             # Merging the video & audio streams
-            ut.merge_streams(formated_filename, selected_stream[1])
-            playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
-
-
-    # Option_2: Download video description
-    console.print("[normal1]Download [normal2]video description[/]? ([normal2]1[/]:yes, [normal2]else[/]:NO): [/]", end="")
-    vid_description_option = ut.yes_no_choice()
+            dh.merge_streams(formated_filename, selected_stream[1])
+            playsound(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/"), "SFX/Yay.mp3"))
+    
+    # Option_2: Downloading video description
+    vid_description_option = tui.issue_yes_no_question("Download video description?")
+    console.print("")
     if vid_description_option:
-        ut.optional_download(formated_filename, "Description", vid_obj)
-
-    console.print("[normal1]Do you want to download [normal2]another video[/]? ([normal2]1[/]:yes, [normal2]else[/]:NO): [/]", end="")
-    continue_option = ut.yes_no_choice()
-    return continue_option != 0
+        dh.optional_downloads(formated_filename, "Description", vid_obj)
+    
+    continue_option_choice = tui.issue_yes_no_question("Download another video?")
+    console.print("")
+    return continue_option_choice != 0
 
 
 
 def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_video=0) -> bool:
     """
-    ### Description:
+    Description:
         Download many videos from a playlist or individual videos using links from a file.
-
-    ### Parameters:
-        - `from_playlist` -> `bool`:
+    ---
+    Parameters:
+        `from_playlist` (`bool`)
             Whether to download from a playlist or individual videos using links from a file.
-        - `video_link`    -> `str`:
+        
+        `playlist_link` (`str`)
             A link to a playlist.
-        - `from_video`    -> `int`:
+        
+        `from_video`    (`int`)
             The start video number to start downloading from (playlist only).
-        - `to_video`      -> `int`:
+        
+        `to_video`      (`int`)
             The number of the last video to download (playlist only).
-
-    ### Returns:
-        Whether to continue the script with the same mode or not.
+    ---
+    Returns:
+        (`bool`) => Whether to continue the script with the same mode or not.
     """
-
-    # Generate video objects from the (playlist link/file containing individual video links)
+    
+    # Creating video objects from the (playlist link/file containing individual video links)
     start_video_number = 1
     if from_playlist:
-        vid_objs = lo.get_vid_objs_from_playlist(playlist_link, from_video, to_video)
+        vid_objs = yoh.get_vid_objs_from_playlist(playlist_link, from_video, to_video)
         start_video_number = vid_objs.pop(0)
-        playlist_name = vid_objs.pop(0)
+        playlist_name = vid_objs.pop(0)       
         
-        # Create a new directory with the name of the playlist and `cd` to it.
-        formated_playlist_name = ut.format_name(playlist_name)
+        # To reset the current working directory in case of continuing the script.
+        os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Downloads"))
+        
+        # Creating a new directory with the name of the playlist then `cd`ing to it
+        formated_playlist_name = dh.format_name(playlist_name)
         os.makedirs(formated_playlist_name, exist_ok=True)
         os.chdir(formated_playlist_name)
     else:
-        vid_objs = lo.get_vid_objs_from_file()
-
+        # Creating a new directory with name in the format "{current date}, {time}" then `cd`ing to it
+        # Date/time formats: https://www.programiz.com/python-programming/datetime/strftime
+        formated_download_directory_name = dt.now().strftime("%Y-%m-%d, %I-%M-%S %p")
+        os.makedirs(formated_download_directory_name, exist_ok=True)
+        os.chdir(formated_download_directory_name)
+        vid_objs = yoh.get_vid_objs_from_file()
+    
     console.print(f"[normal1]Below are the [normal2]{'playlist videos' if from_playlist else 'videos'}[/] {'you selected for download' if from_playlist else 'from the provided links'}:[/]")
     console.print(f"[normal1]{'='*56 if from_playlist else '='*45}[/]")
     
@@ -142,89 +151,91 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
     total_size      = 0
     total_duration  = 0
     selected_streams_for_download = []
+    
     for obj_num, vid_obj in enumerate(vid_objs, start_video_number):
-        # Remove stupid colons and unsupported characters for a filename
-        valid_filename    = ut.format_name(vid_obj.title, pytube_format=True)
-        if vid_obj.title[0].isnumeric() or vid_obj.title.split(" ", maxsplit=1)[0].lower() == "part":
-            formated_filename = ut.format_name(vid_obj.title.split(" ", maxsplit=1)[1])
+        # Removing stupid colons and unsupported characters for a filename
+        valid_filename    = dh.format_name(vid_obj.title, pytube_format=True)
+        if vid_obj.title[0].isnumeric() or vid_obj.title[1].isnumeric() or vid_obj.title.split(" ", maxsplit=1)[0].lower() == "part":
+            formated_filename = dh.format_name(str(obj_num) + ". " + vid_obj.title.split(" ", maxsplit=1)[1])
         else:
-            formated_filename = ut.format_name(str(obj_num) + ". " + vid_obj.title)
-
-        # Check if the video is already downloaded before doing anything
+            formated_filename = dh.format_name(str(obj_num) + ". " + vid_obj.title)
+        
+        # Checking if the video is already downloaded before doing anything
         if os.path.isfile(formated_filename + " (Merged).mp4"):
             console.print("[exists]This [normal2]video[/] is already downloaded[/]\n")
             console.print(f"[normal1]{'='*42}[/]")
             console.print("")
             continue
         
-        vid_duration = divmod(vid_obj.length, 60)
         total_duration += vid_obj.length
+        mins, secs = divmod(vid_obj.length, 60)
+        hours = 0
+        if mins > 59:
+            hours, mins = divmod(mins, 60)
         
-        console.print(f"[normal1]Video number: [normal2]{obj_num}[/][/]", end="")
-        console.print(f"[normal1]  |  Duration: [normal2]{vid_duration[0]:02}[/]:[normal2]{vid_duration[1]:02}[/] min{'s' if vid_duration[0] > 1 else ''}[/]")
-        console.print(f"[normal1]Video title:  [normal2]{vid_obj.title}[/][/]\n")
-
-
+        console.print(f"[normal1]Duration: [normal2]{format(hours, '02')+':' if hours else ''}[/][normal2]{mins:02}[/]:[normal2]{secs:02}[/][/]", end="  |  ")
+        console.print(f"[normal1]Release Date: [normal2]{vid_obj.publish_date.strftime('%d-%m-%Y')}[/][/]")
+        console.print(f"[normal1]Video #[exists]{obj_num}[/]: [normal2]{vid_obj.title}[/][/]\n")
+        
         # Printing the available streams
         console.print("[normal1]Available streams are:[/]")
         console.print(f"[normal1]{'='*22}[/]")
-
+        
         # {"video/mp4": [[stream_obj, vid_obj.video_id, str_file_size, file_size], ...],
         # "audio/mp4": ...}
-        vid_streams_dict = vmd.get_vid_metadata(vid_obj, True)
+        vid_streams_dict = vmd.get_vid_metadata(vid_obj)
         
-        # categories_lengths = [number_of_categories, [number of streams in each category]]
+        # Returns the number of streams in each category
         categories_lengths = vmd.print_streams(vid_streams_dict)
-
-
-        ## Option_1: Download video & audio streams then merge them with ffmpeg
-        # (Commented because I don't rarely download audio and video stream without merging when downloading a playlist)
+        
+        # Option_1: Download video & audio streams then merge them with ffmpeg
+        #/// (Commented because I never download only a video or an audio stream without the merge option when downloading from a playlist)
         # merge_option = 0
         # if "video/mp4" in vid_streams_dict and "audio/mp4" in vid_streams_dict:
-        #     console.print("[normal1]Download [normal2]video[/] & [normal2]audio[/] streams and merge them with ffmpeg?[/]")
-        #     console.print("[normal1]Available options: ([normal2]1[/]:YES  |  [normal2]2/skip[/]:break  |  [normal2]else[/]:no): [/]", end="")
-        #     merge_option = ut.yes_no_choice(blank_true=True, third_option=True)
+            #/// if not from_playlist:
+        merge_option = tui.issue_selection_question("Choose from the following options: ", ["Download only one stream", "Download and merge two separate streams", "Skip this one", "Skip all"], 1, [1, 2, 0, -1])
+        console.print("")
+            #/// This is to skip the merge_option input process (continuing from the above commented part).
+            #/// merge_option = 1
         
-        # if merge_option == 2: # i.e., 'skip'
-        #         break
-        # else:
-            # Choices >> [Categories and resolutions] >> Ex: [1, 5, 4, 1]
+        if merge_option == 0:  # i.e., 'skip this one'
+            continue
+        if merge_option == -1: # i.e., 'skip all'
+            break
         
+        selected_streams_pointers = []
+        # Choices >> [Categories and resolutions] >> Ex: [1*, 5, 2*, 1] (* means fixed value if res_only == True)
         
-        # This is to skip the merge_option input process because it is unnecessary for me.
-        merge_option = 1
-
-        selected_streams = []
-        # Choices >> [Categories and resolutions] >> Ex: [1*, 5, 2*, 1] (* means always the same value)
-        selected_streams = ut.select_streams(merge_option,  categories_lengths, res_only = True)
+        selected_streams_pointers = dh.select_streams(merge_option,  categories_lengths, res_only = False)
         
-        if(selected_streams[0]): # If the only item != 0
+        if selected_streams_pointers[0]: # If the only item != 0
+            # Downloading video description
+            dh.optional_downloads(formated_filename, "Description", vid_obj)
+            
             # ["video/mp4", "audio/mp4", ...]
             streams_categories = list(vid_streams_dict.keys())
             
-            # Get the selected category and resolution option
-            selected_stream = vid_streams_dict[streams_categories[selected_streams[0]-1]][selected_streams[1]-1]
-
-            if not merge_option:
-                if selected_stream[0].type == 'video':
-                    selected_streams_for_download.append(ut.format_selected_vid_streams_into_dict(formated_filename, valid_filename, selected_stream))
-                else:
-                    selected_streams_for_download.append(ut.format_selected_vid_streams_into_dict(formated_filename, valid_filename, selected_audio_stream=selected_stream))
-                total_size     += selected_stream[3]
-                console.print(f"[normal1]The next [normal2]{selected_stream[0].type}[/] stream has been added to the download list: [normal2]{selected_stream[0].mime_type}[/], [normal2]{selected_stream[0].resolution if selected_stream[0].type == 'video' else selected_stream[0].abr}[/], [normal2]{selected_stream[2].strip()}[/]...[/]\n")
-
-            else:
-                # Audio stream
-                selected_audio_stream = vid_streams_dict[streams_categories[selected_streams[2]-1]][selected_streams[3]-1]
-                selected_streams_for_download.append(ut.format_selected_vid_streams_into_dict(formated_filename, valid_filename, selected_stream, selected_audio_stream, merge_option=True))
-                total_size += selected_stream[3] + selected_audio_stream[3]
-
+            # Getting the selected category and resolution option (for the first in case of merge_option)
+            first_selected_stream = vid_streams_dict[streams_categories[selected_streams_pointers[0]-1]][selected_streams_pointers[1]-1]
+            
+            # Adding streams to the selected streams list
+            if merge_option == 1: # "Download only one stream"
+                selected_streams_for_download.append(dh.format_selected_vid_streams_into_dict(formated_filename, valid_filename, first_selected_stream))
+                total_size += first_selected_stream[3]
+                console.print(f"[normal1]The next [normal2]{first_selected_stream[0].type}[/] stream has been added to the download list: [normal2]{first_selected_stream[0].mime_type}[/], [normal2]{first_selected_stream[0].resolution if first_selected_stream[0].type == 'video' else first_selected_stream[0].abr}[/], [normal2]{first_selected_stream[2].strip()}[/]...[/]\n")
+            
+            else: # "Download and merge two separate streams"
+                second_selected_stream = vid_streams_dict[streams_categories[selected_streams_pointers[2]-1]][selected_streams_pointers[3]-1]
+                selected_streams_for_download.append(dh.format_selected_vid_streams_into_dict(formated_filename, valid_filename, first_selected_stream, second_selected_stream))
+                total_size += first_selected_stream[3] + second_selected_stream[3]
+                
                 console.print("[normal1]The next [normal2]video[/] & [normal2]audio[/] streams have been added to the download list:[/]")
-                console.print(f"[normal1][normal2]{selected_stream[0].mime_type}[/], [normal2]{selected_stream[0].resolution}[/], [normal2]{selected_stream[2].strip()}[/][/]")
-                console.print(f"[normal1][normal2]{selected_audio_stream[0].mime_type}[/], [normal2]{selected_audio_stream[0].abr}[/], [normal2]{selected_audio_stream[2].strip()}[/][/]\n")
+                console.print(f"[normal1][normal2]{first_selected_stream[0].mime_type}[/], [normal2]{first_selected_stream[0].resolution if first_selected_stream[0].type == 'video' else first_selected_stream[0].abr}[/], [normal2]{first_selected_stream[2].strip()}[/][/]")
+                console.print(f"[normal1][normal2]{second_selected_stream[0].mime_type}[/], [normal2]{second_selected_stream[0].abr if second_selected_stream[0].type == 'audio' else second_selected_stream[0].resolution}[/], [normal2]{second_selected_stream[2].strip()}[/][/]\n")
         console.print(f"[normal1]{'='*42}[/]")
         console.print("")
-
+    
+    # Downloading selected streams
     if not len(selected_streams_for_download):
         console.print("[warning1]No [warning2]streams[/] were selected for download![/]\n")
     else:
@@ -240,29 +251,45 @@ def download_many_videos(from_playlist=True, playlist_link="", from_video=0, to_
                     console.print(f"[normal1]Title: [normal2]{stream['audio'][0][0].title}[/]\nInfo: [/]", end="")
                 console.print(f"[normal1][normal2]{stream['audio'][0][0].mime_type}[/], [normal2]{stream['audio'][0][0].abr}[/], [normal2]{stream['audio'][0][2].strip()}[/][/]")
             console.print("")
-
-        total_duration = divmod(total_duration, 60)
-        console.print(f"[normal1]Total size:     [normal2]{round(total_size, 2)}[/] MB[/]")
-        console.print(f"[normal1]Total Duration: [normal2]{total_duration[0]}[/]:[normal2]{total_duration[1]}[/] min{'s' if int(total_duration[0])>1 else ''}[/]")
-        console.print("[normal1]Confirm? ([normal2]1[/]:YES, [normal2]else[/]:no): [/]", end="")
-        if ut.yes_no_choice(blank_true=True):
-            ut.download_streams(selected_streams_for_download)
-            playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/Yay.mp3")
+        
+        mins, secs = divmod(total_duration, 60)
+        hours = 0
+        if mins > 59:
+            hours, mins = divmod(mins, 60)
+        
+        console.print(f"[normal1]Total size:     [normal2]{format(total_size / 1024, '.2f')+'[/] GB' if total_size >= 1024 else format(total_size, '.2f')+'[/] MB'}[/]")
+        console.print(f"[normal1]Total Duration: [normal2]{format(hours, '02')+':' if hours else ''}[/][normal2]{mins:02}[/]:[normal2]{secs:02}[/][/]\n") # min{'s' if int(total_duration[0])>1 else ''}
+        if tui.issue_yes_no_question("Confirm download?", 1):
+            console.print("")
+            no_subtitles = tui.issue_yes_no_question("Download subtitles?", 1, [1, 0])
+            while True:
+                console.print("")
+                selected_streams_for_download = dh.download_streams(selected_streams_for_download, no_subtitles)
+                if len(selected_streams_for_download):
+                    console.print(f"[warning1]The following streams were not/partially downloaded:\n")
+                    console.print(f"[normal1]{'='*51}[/]")
+                    console.print('\n'.join([fd.get('video', fd.get('audio'))[1] for fd in selected_streams_for_download]))
+                    console.print("")
+                    if not tui.issue_yes_no_question("Retry downloading failed videos?", 1):
+                        console.print("")
+                        break
+                else:
+                    break
+            playsound(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/"), "SFX/Yay.mp3"))
         else:
-            console.print("[warning1]][warning2]Download[/] aborted...[/]\n")
-
+            console.print("\n[warning1]][warning2]Download[/] cancelled...[/]\n")
+    
     if from_playlist:
-        console.print("[normal1]Do you want to download [normal2]another playlist[/]? ([normal2]1[/]:yes, [normal2]else[/]:NO): [/]", end="")
-        continue_option = ut.yes_no_choice()
-        return continue_option != 0
+        continue_option_choice = tui.issue_yes_no_question("Download another playlist?")
+        console.print("")
+        return continue_option_choice != 0
     else:
         return False
 
-
-
 if __name__ == "__main__":
+    console.print("[exists]Initializing script...[/]")
     terminal_argument_link = ""
-
+    
     if len(argv) > 1:
         if argv[1] in ["help", "-h", "--help"]:
             console.print("""
@@ -280,8 +307,22 @@ if __name__ == "__main__":
 [normal2]to_video[/]    : The [normal2]video number[/] of the last video you want when downloading a [normal2]playlist[/].[/]""")
             
             choice = -999 # Skip and end the script.
-
-        elif argv[1] in ["1", "yes", "y"]:
+        
+        elif argv[1] == "-a":
+            video_links = []
+            if len(argv) > 2:
+                video_links.extend((" ".join(argv[2:])).split(" "))
+            else:
+                console.print("[normal1]Enter the [normal2]links[/] to the [normal2]youtube videos[/] you want to download (enter a [normal2]blank line[/] to continue):[/]")
+                while True:
+                    link = input(f"> Link {len(video_links)+1:02}: ").strip()
+                    if link == "":
+                        break
+                    video_links.extend(link.split(" "))
+            yoh.add_links_to_file(video_links)
+            choice = 2
+        
+        elif argv[1] == "1":
             choice = 1
         elif argv[1] == "2":
             choice = 2
@@ -292,7 +333,8 @@ if __name__ == "__main__":
             terminal_argument_link = argv[2]
     else:
         console.print("[normal1]Choose a mode: ([normal2]1[/]:ONE VIDEO  |  [normal2]2[/]:links from file  |  [normal2]else[/]:playlist): [/]", end="")
-        choice = ut.yes_no_choice(blank_true=True, third_option=True)
+        choice = tui.issue_selection_question("Choose one mode:", ["One video", "Links from file", "Playlist"], 0, [1, 2, 3])
+        console.print("")
     
     if choice != -999:
         while True:
@@ -305,15 +347,15 @@ if __name__ == "__main__":
                     continue_option = download_many_videos(playlist_link = terminal_argument_link, from_video=int(argv[3]), to_video=int(argv[4]))
                 else:
                     continue_option = download_many_videos(playlist_link = terminal_argument_link)
-            if(not continue_option):
+            if not continue_option:
                 console.print("[normal1][normal2]Exiting[/]... Opening the [normal2]download location[/] and pointing to the [normal2]newest file[/] now...[/]")
                 # os.startfile(os.getcwd())
                 list_of_files = glob("*.mp4") # * means all. To target a specific file extension: `*.mp4`
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system(f"explorer /select, {latest_file}")
+                os.system(f"explorer /select, \"{latest_file}\"")
                 break
             
             # Clear the previously entered video link and terminal arguments if another iteration is happening:
             terminal_argument_link = ""
             argv = [argv[0]]
-    # playsound(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/") + "/SFX/goodbye-old-friend.mp3")
+    # playsound(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace("\\", "/"), "SFX/goodbye-old-friend.mp3"))
