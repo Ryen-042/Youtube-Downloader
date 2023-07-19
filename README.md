@@ -1,5 +1,9 @@
 # Youtube-Downloader
 YouTube video, audio, and playlist downloader with pytube.
+
+# Update
+This project is no longer maintained. Use the [this project](https://github.com/Ryen-042/Youtube-Downloader-Yt-Dlp) instead.
+
 ## Why did I write this script?
 Because of Google. I was using FDM to download videos from Youtube until Google came and caused the FDM team to drop this feature for unknown reasons (a real mystery indeed). There are similar apps and even online websites that can download from youtube. You only have to be content with what they decided to give (or show) you until Google comes again to do its usual business with them.
 
